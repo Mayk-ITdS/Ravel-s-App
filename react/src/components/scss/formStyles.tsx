@@ -16,12 +16,14 @@ export const formStyles = {
     fontFamily: "'Roboto', sans-serif",
   },
   label: {
+    marginTop: "10px",
     color: "#FFB6C1",
     marginBottom: "8px",
     fontWeight: "600",
     fontSize: "0.9rem",
   },
   textField: {
+    marginTop: "15px",
     "& .MuiOutlinedInput-notchedOutline": {
       borderColor: "#6CA0DC",
     },
@@ -29,7 +31,7 @@ export const formStyles = {
       borderColor: "#FFB6C1",
     },
     "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-      borderColor: "#FFB6C1",
+      borderColor: "green",
     },
     "& .MuiInputBase-input::placeholder": {
       color: "#A9A9A9",

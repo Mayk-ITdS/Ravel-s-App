@@ -7,8 +7,10 @@ import {
   Button,
   TextField,
   Grid,
+  Typography,
+  Stack,
 } from "@mui/material";
-
+import { ButtonProps } from "@mui/material";
 import { formStyles } from "../scss/formStyles";
 
 interface AddWorkProps {
@@ -20,9 +22,32 @@ interface AddWorkProps {
     compositionDate: string,
     premiere: string,
     description: string,
-    spotifyLink: string
+    spotifyLink: string,
+    details: {
+      importantPerformancePlace: string;
+      date: string;
+      performers: string;
+      coworkers: string;
+    }
   ) => void;
 }
+
+interface TextButtonsProps extends ButtonProps {
+  onClick: () => void;
+}
+const TextButtons: React.FC<TextButtonsProps> = ({
+  onClick,
+  ...props
+}: TextButtonsProps) => {
+  return (
+    <Stack direction="row" spacing={2}>
+      <Button onClick={onClick} {...props} variant="contained">
+        Add Detail
+      </Button>
+    </Stack>
+  );
+};
+export default TextButtons;
 
 const AddWork: React.FC<AddWorkProps> = ({ open, onClose, onSave }) => {
   const [title, setTitle] = useState("");
@@ -31,15 +56,58 @@ const AddWork: React.FC<AddWorkProps> = ({ open, onClose, onSave }) => {
   const [premiere, setPremiere] = useState("");
   const [description, setDescription] = useState("");
   const [spotifyLink, setSpotifyLink] = useState("");
+  const [details, setDetails] = useState({
+    importantPerformancePlace: "",
+    date: "",
+    performers: "",
+    coworkers: "",
+  });
+
+  const [currentDetailKey, setCurrentDetailKey] = useState<
+    keyof typeof details
+  >("importantPerformancePlace");
+
+  const [detailsList, setDetailsList] = useState<
+    { key: keyof typeof details; value: string }[]
+  >([]);
+
+  const handleAddDetail = () => {
+    if (details[currentDetailKey]) {
+      setDetailsList((prev) => [
+        ...prev,
+        { key: currentDetailKey, value: details[currentDetailKey] },
+      ]);
+      setDetails((prev) => ({ ...prev, [currentDetailKey]: "" }));
+      const keys = Object.keys(details) as (keyof typeof details)[];
+      const nextKeyIndex = (keys.indexOf(currentDetailKey) + 1) % keys.length;
+      setCurrentDetailKey(keys[nextKeyIndex]);
+    }
+  };
+
   const handleSaveWork = () => {
-    onSave(title, genre, compositionDate, premiere, description, spotifyLink);
+    const finalDetails = detailsList.reduce(
+      (acc, detail) => ({ ...acc, [detail.key]: detail.value }),
+      {}
+    ) as typeof details;
+
+    onSave(
+      title,
+      genre,
+      compositionDate,
+      premiere,
+      description,
+      spotifyLink,
+      finalDetails
+    );
     setTitle("");
     setCompositionDate("");
     setGenre("");
     setPremiere("");
     setDescription("");
     setSpotifyLink("");
+    setDetailsList([]);
   };
+
   return (
     <Dialog
       open={open}
@@ -114,10 +182,61 @@ const AddWork: React.FC<AddWorkProps> = ({ open, onClose, onSave }) => {
                 sx={formStyles.textField}
               />
             </Grid>
+            {/*Super Dynamiczne Inputy*/}
+            <Grid item xs={12}>
+              <Grid container spacing={2}>
+                <Grid
+                  item
+                  xs={10}
+                  sx={{
+                    fontFamily: "sans-serif",
+                    fontWeight: "700",
+                    color: "blue",
+                  }}
+                >
+                  Details
+                  <TextField
+                    value={details[currentDetailKey]}
+                    variant="outlined"
+                    fullWidth
+                    label={`Enter ${currentDetailKey}`}
+                    onChange={(e) =>
+                      setDetails((prev) => ({
+                        ...prev,
+                        [currentDetailKey]: e.target.value,
+                      }))
+                    }
+                    sx={formStyles.textField}
+                  />
+                </Grid>
+                <Grid item xs={2}>
+                  <TextButtons
+                    onClick={handleAddDetail}
+                    sx={{
+                      top: "45px",
+                      backgroundColor: "transparent",
+                      border: "none",
+                      color: "blue",
+                    }}
+                    variant="outlined"
+                  ></TextButtons>
+                </Grid>
+              </Grid>
+              <Grid container spacing={1} sx={{ marginTop: "16px" }}>
+                {detailsList.map((detail, index) => (
+                  <Grid item xs={12} key={index}>
+                    <Typography>
+                      <strong>{detail.key}:</strong>
+                      {detail.value}
+                    </Typography>
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
           </Grid>
         </form>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ display: "flex", justifyContent: "space-between" }}>
         <Button sx={formStyles.buttonCancel} onClick={onClose}>
           Cancel
         </Button>
