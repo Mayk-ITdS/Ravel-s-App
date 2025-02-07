@@ -9,7 +9,7 @@ import {
   CardMedia,
 } from "@mui/material";
 import AddEditItemDialog from "./AddEditItemDialog";
-import { Product, Event } from "../../types";
+import { Product, Event } from "../../types/types";
 import axios from "axios";
 
 type EditType = "product" | "event";
@@ -67,8 +67,6 @@ const AdminPanel: React.FC = () => {
     setOpenDialog(true);
   };
   const handleDelete = async (type: "products" | "events", id: number) => {
-    if (!window.confirm("Czy na pewno chcesz usunąć ten element?")) return;
-
     try {
       await axios.delete(`http://localhost:5000/${type}/${id}`);
 
@@ -174,7 +172,10 @@ const AdminPanel: React.FC = () => {
                 <Button onClick={() => handleOpenDialog("product", product)}>
                   Edytuj
                 </Button>
-                <Button color="error" onClick={() => handleDelete}>
+                <Button
+                  color="error"
+                  onClick={() => handleDelete("products", product.id)}
+                >
                   Usuń
                 </Button>
               </CardContent>
@@ -202,7 +203,10 @@ const AdminPanel: React.FC = () => {
                 <Button onClick={() => handleOpenDialog("event", event)}>
                   Edytuj
                 </Button>
-                <Button color="error" onClick={() => handleDelete}>
+                <Button
+                  color="error"
+                  onClick={() => handleDelete("events", event.id)}
+                >
                   Usuń
                 </Button>
               </CardContent>

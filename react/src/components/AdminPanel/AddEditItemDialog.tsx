@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Product, Event } from "../../types";
+import { Product, Event } from "../../types/types";
 import {
   Dialog,
   DialogTitle,

@@ -37,6 +37,8 @@ const Header: React.FC = () => {
           <Box
             sx={{
               display: "flex",
+              justifyContent: "space-between",
+              width: "30%",
               alignItems: "center",
               backgroundColor: "rgba(255,255,255,0.2)",
               borderRadius: "8px",
@@ -45,10 +47,10 @@ const Header: React.FC = () => {
           >
             <InputBase
               placeholder="Szukaj..."
-              sx={{ color: "white", width: "200px" }}
+              sx={{ color: "white", width: "50%" }}
             />
             <IconButton>
-              <SearchIcon sx={{ color: "#E5B05E" }} />
+              <SearchIcon sx={{ color: "#E5B05E", alignSelf: "right" }} />
             </IconButton>
           </Box>
 

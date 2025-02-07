@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import {
   Box,
   Container,
@@ -15,7 +16,8 @@ import {
 import { motion } from "framer-motion";
 import heroImage from "../assets/hero.jpg";
 import axios from "axios";
-
+import { useSelector } from "react-redux";
+import { RootState } from "../Store/store";
 // Definicja typu produktu
 interface Product {
   id: number;
@@ -43,6 +45,10 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const user = useSelector((state: RootState) => state.auth.user);
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
   useEffect(() => {
     // Pobranie produktów z backendu
     const fetchData = async () => {

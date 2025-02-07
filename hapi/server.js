@@ -4,7 +4,7 @@ import path from "path";
 import mysql from "mysql2/promise";
 import { fileURLToPath } from "url";
 import inert from "@hapi/inert";
-
+import bcrypt from "bcrypt";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -33,6 +33,12 @@ const server = Hapi.server({
     },
   },
 });
+server.ext("onRequest", (request, h) => {
+  console.log(
+    `📥 Otrzymano zapytanie: ${request.method.toUpperCase()} ${request.path}`
+  );
+  return h.continue;
+});
 
 // **Rejestracja Inert do obsługi statycznych plików**
 await server.register(inert);
@@ -46,6 +52,111 @@ server.route({
       path: uploadDir,
       listing: true,
     },
+  },
+});
+server.route({
+  method: "POST",
+  path: "/register",
+  options: {
+    payload: {
+      allow: ["application/json", "application/x-www-form-urlencoded"],
+      parse: true,
+    },
+  },
+  handler: async (request, h) => {
+    const { username, email, password } = request.payload;
+
+    try {
+      console.log("Otrzymane dane rejestracji", { username, email });
+
+      const [existingUser] = await db.execute(
+        "SELECT id From users WHERE email = ?",
+        [email]
+      );
+      if (existingUser.length > 0) {
+        return h.response({ error: "Email already in use" }).code(400);
+      }
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      const [result] = await db.execute(
+        "INSERT INTO users (username, email, password_hash, created_at) VALUES (?,?,?,NOW())",
+        [username, email, hashedPassword]
+      );
+
+      return h
+        .response({
+          message: "User registered successfully",
+          user: { id: result.insertId, username, email },
+        })
+        .code(201);
+    } catch (error) {
+      console.error("❌ Błąd rejestracji:", error);
+      return h.response({ error: "Internal Server Error" }).code(500);
+    }
+  },
+});
+
+server.route({
+  method: "POST",
+  path: "/login",
+  options: {
+    payload: {
+      allow: ["application/json", "application/x-www-form-urlencoded"],
+      parse: true,
+    },
+  },
+  handler: async (request, h) => {
+    console.log("📥 Otrzymane dane:", JSON.stringify(request.payload, null, 2));
+
+    if (!request.payload?.email || !request.payload?.password) {
+      return h.response({ error: "Email i hasło są wymagane" }).code(400);
+    }
+
+    const { email, password } = request.payload;
+
+    try {
+      console.log("Otrzymane dane logowania:", { email, password });
+
+      const sql =
+        "SELECT id, username, email, password_hash FROM users WHERE email = ?";
+      const [rows] = await db.execute(sql, [email]);
+
+      console.log("🟡 Dane pobrane z bazy:", rows);
+
+      if (!rows.length) {
+        return h.response({ error: "User not found" }).code(404);
+      }
+
+      const user = rows[0];
+      console.log("🔑 Hasło użytkownika w bazie:", user.password_hash);
+      console.log("🔑 Hasło podane przez użytkownika:", password);
+
+      // 🛑 Poprawione sprawdzanie hasła
+      const isPasswordCorrect = await bcrypt.compare(
+        password,
+        user.password_hash
+      );
+      if (!isPasswordCorrect) {
+        return h.response({ error: "Invalid password" }).code(401);
+      }
+
+      const token = jwt.sign(
+        { id: user.id, username: user.username, email: user.email },
+        JWT_SECRET,
+        { expiresIn: "2h" } // Token ważny przez 2 godziny
+      );
+      return h
+        .response({
+          message: "Login successful",
+          user: { id: user.id, username: user.username, email: user.email },
+          token,
+        })
+        .code(200);
+    } catch (error) {
+      console.error("❌ Login error:", error);
+      return h.response({ error: "Internal Server Error" }).code(500);
+    }
   },
 });
 
@@ -63,7 +174,7 @@ server.route({
 
     try {
       const [rows] = await db.execute(`SELECT * FROM ${type}`);
-
+      console.log("📦 Dane z bazy:", [rows]);
       const formattedData = rows.map((item) => ({
         ...item,
         image: item.image
@@ -229,25 +340,12 @@ server.route({
     }
 
     try {
-      // 🔍 Pobieramy obraz, jeśli istnieje
-      const [rows] = await db.execute(`SELECT image FROM ${type} WHERE id=?`, [
-        id,
-      ]);
+      const [rows] = await db.execute(`SELECT * FROM ${type} WHERE id=?`, [id]);
       if (rows.length === 0) {
         return h
           .response({ error: "Nie znaleziono elementu do usunięcia." })
           .code(404);
       }
-
-      // 🗑️ Usuwamy obraz z serwera, jeśli istnieje
-      const imagePath = rows[0].image
-        ? path.join(__dirname, rows[0].image)
-        : null;
-      if (imagePath && fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      }
-
-      //  Usuwamy rekord z bazy
       await db.execute(`DELETE FROM ${type} WHERE id=?`, [id]);
 
       return h.response({ message: `${type.slice(0, -1)} usunięty` });

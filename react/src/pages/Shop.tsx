@@ -12,8 +12,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { motion } from "framer-motion";
-
-const API_URL = "http://localhost:5000/products";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../Store/cartSlice";
 
 interface Product {
   id: number;
@@ -30,13 +30,14 @@ interface Event {
   date: number;
   image: string;
 }
+
 const Shop: React.FC = () => {
   const { category } = useParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const dispatch = useDispatch();
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -123,6 +124,18 @@ const Shop: React.FC = () => {
                           backgroundColor: "#490D2D",
                           "&:hover": { backgroundColor: "#7D173F" },
                         }}
+                        onClick={() =>
+                          dispatch(
+                            addToCart({
+                              id: product.id,
+                              name: product.name,
+                              price: product.price,
+                              image: product.image,
+                              quantity: 1,
+                              type: "product",
+                            })
+                          )
+                        }
                       >
                         Dodaj do koszyka
                       </Button>
@@ -174,6 +187,18 @@ const Shop: React.FC = () => {
                           backgroundColor: "#490D2D",
                           "&:hover": { backgroundColor: "#7D173F" },
                         }}
+                        onClick={() =>
+                          dispatch(
+                            addToCart({
+                              id: event.id,
+                              name: event.title,
+                              price: 99.99,
+                              image: event.image,
+                              quantity: 1,
+                              type: "event",
+                            })
+                          )
+                        }
                       >
                         Dodaj do koszyka
                       </Button>
