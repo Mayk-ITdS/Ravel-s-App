@@ -2,9 +2,9 @@ export interface Product {
   id: number;
   name: string;
   description: string;
-  price?: number;
+  price: number;
   category?: string;
-  image?: string | null | File | any; // 🛠️ Zmieniamy BLOB na Base64 string | null
+  image: string | null | File | any; // 🛠️ Zmieniamy BLOB na Base64 string | null
   onSave: () => void;
 }
 

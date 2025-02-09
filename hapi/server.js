@@ -1,14 +1,16 @@
 import Hapi from "@hapi/hapi";
 import fs from "fs";
-import path from "path";
 import mysql from "mysql2/promise";
 import { fileURLToPath } from "url";
 import inert from "@hapi/inert";
 import bcrypt from "bcrypt";
+import HapiJWT from "@hapi/jwt";
+import jsonwebtoken from "jsonwebtoken";
+import path from "path";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-//  **Połączenie z bazą MySQL**
 const db = await mysql.createConnection({
   host: "localhost",
   user: "root",
@@ -16,13 +18,6 @@ const db = await mysql.createConnection({
   database: "ravel_store",
 });
 
-// **Tworzymy katalog na obrazy**
-const uploadDir = path.join(__dirname, "assets");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-//  **Tworzymy serwer Hapi**
 const server = Hapi.server({
   port: 5000,
   host: "localhost",
@@ -33,17 +28,39 @@ const server = Hapi.server({
     },
   },
 });
+
+await server.register(inert);
+await server.register(HapiJWT);
+
+server.auth.strategy("jwt", "jwt", {
+  keys: Buffer.from("ilina112", "base64"),
+  verify: {
+    aud: false,
+    iss: false,
+    sub: false,
+    maxAgeSec: 14400,
+  },
+  validate: (artifacts, request, h) => {
+    return {
+      isValid: true,
+      credentials: { userId: artifacts.decoded.payload.id },
+    };
+  },
+});
+
+server.auth.default("jwt");
+
 server.ext("onRequest", (request, h) => {
   console.log(
     `📥 Otrzymano zapytanie: ${request.method.toUpperCase()} ${request.path}`
   );
   return h.continue;
 });
+const uploadDir = path.join(__dirname, "assets");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
-// **Rejestracja Inert do obsługi statycznych plików**
-await server.register(inert);
-
-// 🔥 **Serwowanie plików statycznych**
 server.route({
   method: "GET",
   path: "/assets/{file*}",
@@ -91,7 +108,7 @@ server.route({
         })
         .code(201);
     } catch (error) {
-      console.error("❌ Błąd rejestracji:", error);
+      console.error(" Błąd rejestracji:", error);
       return h.response({ error: "Internal Server Error" }).code(500);
     }
   },
@@ -101,6 +118,7 @@ server.route({
   method: "POST",
   path: "/login",
   options: {
+    auth: false,
     payload: {
       allow: ["application/json", "application/x-www-form-urlencoded"],
       parse: true,
@@ -132,7 +150,6 @@ server.route({
       console.log("🔑 Hasło użytkownika w bazie:", user.password_hash);
       console.log("🔑 Hasło podane przez użytkownika:", password);
 
-      // 🛑 Poprawione sprawdzanie hasła
       const isPasswordCorrect = await bcrypt.compare(
         password,
         user.password_hash
@@ -141,11 +158,17 @@ server.route({
         return h.response({ error: "Invalid password" }).code(401);
       }
 
-      const token = jwt.sign(
-        { id: user.id, username: user.username, email: user.email },
-        JWT_SECRET,
-        { expiresIn: "2h" } // Token ważny przez 2 godziny
+      const token = jsonwebtoken.sign(
+        {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          isAdmin: user.is_admin,
+        },
+        Buffer.from("ilina112", "base64"),
+        { expiresIn: "2h" }
       );
+
       return h
         .response({
           message: "Login successful",
@@ -154,13 +177,12 @@ server.route({
         })
         .code(200);
     } catch (error) {
-      console.error("❌ Login error:", error);
+      console.error("Login error:", error);
       return h.response({ error: "Internal Server Error" }).code(500);
     }
   },
 });
 
-// **Pobieranie wszystkich produktów lub eventów**
 server.route({
   method: "GET",
   path: "/{type}",
@@ -184,13 +206,119 @@ server.route({
 
       return h.response(formattedData);
     } catch (error) {
-      console.error("❌ Błąd pobierania danych:", error);
+      console.error(" Błąd pobierania danych:", error);
       return h.response({ error: "Błąd pobierania danych" }).code(500);
     }
   },
 });
+server.route({
+  method: "GET",
+  path: "/orders",
+  options: { auth: "jwt" },
+  handler: async (request, h) => {
+    try {
+      console.log("🛡 Uwierzytelniony użytkownik:", request.auth.credentials);
+      const userId = request.auth.credentials.userId;
 
-// **Pobieranie pojedynczego produktu lub eventu**
+      const [orders] = await db.execute(
+        "SELECT * FROM orders WHERE user_id = ?",
+        [userId]
+      );
+
+      console.log(" Zamówienia użytkownika:", orders);
+      return h.response(orders).code(200);
+    } catch (error) {
+      console.error(" Błąd pobierania zamówień:", error);
+      return h.response({ error: "Błąd serwera" }).code(500);
+    }
+  },
+});
+
+server.route({
+  method: "POST",
+  path: "/orders",
+  options: {
+    payload: {
+      parse: true,
+      allow: "application/json",
+    },
+  },
+  handler: async (request, h) => {
+    console.log(
+      "📥 Otrzymane dane do /orders:",
+      JSON.stringify(request.payload, null, 2)
+    );
+
+    const { user_id, items, total } = request.payload;
+
+    if (!user_id || !items || !Array.isArray(items) || items.length === 0) {
+      console.log("Brak wymaganych danych");
+      return h.response({ error: "Brak wymaganych danych" }).code(400);
+    }
+
+    try {
+      await db.beginTransaction();
+
+      console.log("🛒 Tworzenie zamówienia w bazie...");
+      const [orderResult] = await db.execute(
+        "INSERT INTO orders (user_id, total_price, status, created_at) VALUES (?, ?, 'pending', NOW())",
+        [user_id, total]
+      );
+
+      const orderId = orderResult.insertId;
+      console.log(` Zamówienie utworzone, order_id: ${orderId}`);
+
+      if (items.length > 0) {
+        const sql = `
+          INSERT INTO order_items (order_id, product_id, product_name, quantity, price) 
+          VALUES ${items.map(() => "(?, ?, ?, ?, ?)").join(", ")}
+        `;
+
+        const values = items.flatMap(({ id, name, quantity, price }) => {
+          const product_id = id ?? null;
+          const product_name = name ?? "Brak nazwy";
+          const product_quantity = quantity ?? 1;
+          const product_price = price ?? 0.0;
+
+          console.log(
+            `🛠 Sprawdzam: ${product_id}, ${product_name}, ${product_quantity}, ${product_price}`
+          );
+
+          return [
+            orderId,
+            product_id,
+            product_name,
+            product_quantity,
+            product_price,
+          ];
+        });
+
+        console.log(" Zapytanie SQL do `order_items`:");
+        console.log(sql);
+        console.log("Wartości do wstawienia:", values);
+
+        // Wykonanie zapytania z wartościami
+        await db.execute(sql, values);
+      }
+
+      await db.commit();
+      console.log("Zamówienie i produkty zostały zapisane!");
+      return h
+        .response({
+          message: "Zamówienie i produkty zapisane",
+          order_id: orderId,
+        })
+        .code(201);
+    } catch (error) {
+      await db.rollback();
+      console.error("Błąd zapisu zamówienia:", error);
+      return h
+        .response({ error: "Błąd serwera", details: error.message })
+        .code(500);
+    }
+  },
+});
+
 server.route({
   method: "GET",
   path: "/{type}/{id}",
@@ -209,13 +337,12 @@ server.route({
       }
       return h.response(rows[0]);
     } catch (error) {
-      console.error("❌ Błąd pobierania elementu:", error);
+      console.error(" Błąd pobierania elementu:", error);
       return h.response({ error: "Błąd pobierania elementu" }).code(500);
     }
   },
 });
 
-// **Obsługa przesyłania plików i edycji produktów/eventów**
 server.route({
   method: ["POST", "PUT"],
   path: "/{type}/{id?}",
@@ -239,7 +366,6 @@ server.route({
           .code(400);
       }
 
-      // 🖼️ Jeśli plik został przesłany, zapisujemy go w katalogu assets
       let img_array = [];
       if (payload.file) {
         for await (const el of payload.file) {
@@ -320,13 +446,12 @@ server.route({
         id: result.insertId,
       });
     } catch (error) {
-      console.error("❌ Błąd serwera:", error);
+      console.error("Błąd serwera:", error);
       return h.response({ error: "Błąd serwera" }).code(500);
     }
   },
 });
 
-//  **Usuwanie produktu lub eventu**
 server.route({
   method: "DELETE",
   path: "/{type}/{id}",
@@ -356,7 +481,6 @@ server.route({
   },
 });
 
-//  **Uruchomienie serwera**
 const start = async () => {
   await server.start();
   console.log(`🚀 Server running at: ${server.info.uri}`);

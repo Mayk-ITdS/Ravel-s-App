@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -8,12 +8,48 @@ import {
   InputBase,
   Box,
   Container,
+  Menu,
+  MenuItem,
+  Avatar,
+  Badge,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import { Link } from "react-router-dom";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "../Store/store";
+import { logout } from "../Store/authSlice";
 
 const Header: React.FC = () => {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (searchQuery.trim() !== "") {
+      navigate(`/shop?search=${searchQuery}`);
+    }
+  };
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    dispatch(logout());
+    localStorage.clear();
+    handleMenuClose();
+    navigate("/");
+  };
+
   return (
     <AppBar
       position="static"
@@ -21,7 +57,6 @@ const Header: React.FC = () => {
     >
       <Container>
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-          {/* Logo */}
           <Typography
             variant="h5"
             fontWeight="bold"
@@ -33,11 +68,11 @@ const Header: React.FC = () => {
             Ravel Store
           </Typography>
 
-          {/* Wyszukiwarka */}
           <Box
+            component="form"
+            onSubmit={handleSearch}
             sx={{
               display: "flex",
-              justifyContent: "space-between",
               width: "30%",
               alignItems: "center",
               backgroundColor: "rgba(255,255,255,0.2)",
@@ -47,15 +82,16 @@ const Header: React.FC = () => {
           >
             <InputBase
               placeholder="Szukaj..."
-              sx={{ color: "white", width: "50%" }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              sx={{ color: "white", width: "100%" }}
             />
-            <IconButton>
-              <SearchIcon sx={{ color: "#E5B05E", alignSelf: "right" }} />
+            <IconButton type="submit">
+              <SearchIcon sx={{ color: "#E5B05E" }} />
             </IconButton>
           </Box>
 
-          {/* Nawigacja */}
-          <Box sx={{ display: "flex", gap: "15px" }}>
+          <Box sx={{ display: "flex", gap: "15px", alignItems: "center" }}>
             <Button
               color="inherit"
               component={Link}
@@ -80,9 +116,54 @@ const Header: React.FC = () => {
             >
               O nas
             </Button>
+
             <IconButton component={Link} to="/cart">
-              <ShoppingCartIcon sx={{ color: "#E5B05E" }} />
+              <Badge badgeContent={cartItems.length} color="error">
+                <ShoppingCartIcon sx={{ color: "#E5B05E" }} />
+              </Badge>
             </IconButton>
+
+            {user ? (
+              <>
+                <Typography
+                  sx={{ mr: 1, fontWeight: "bold", color: "#E5B05E" }}
+                >
+                  {user.username}
+                </Typography>
+                <IconButton onClick={handleMenuOpen}>
+                  <Avatar sx={{ bgcolor: "#E5B05E" }}>
+                    <AccountCircleIcon />
+                  </Avatar>
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                >
+                  <MenuItem onClick={() => navigate("/user/dashboard")}>
+                    Moj dashboard
+                  </MenuItem>
+                  <Button
+                    variant="contained"
+                    component={Link}
+                    to="/admin"
+                    sx={{
+                      backgroundColor: "#490D2D",
+                      color: "white",
+                      "&:hover": { backgroundColor: "#350A1E" },
+                    }}
+                  >
+                    Panel Admina
+                  </Button>
+
+                  <MenuItem onClick={handleLogout}>Wyloguj się</MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <Button color="inherit" component={Link} to="/login">
+                Zaloguj się
+              </Button>
+            )}
           </Box>
         </Toolbar>
       </Container>

@@ -1,6 +1,7 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-interface CartItem {
+import { RootState } from "./store";
+export interface CartItem {
   id: number;
   name: string;
   price: number;
@@ -9,7 +10,7 @@ interface CartItem {
   type: "product" | "event";
 }
 
-interface CartState {
+export interface CartState {
   items: CartItem[];
   totalAmount: number;
 }
@@ -74,33 +75,51 @@ const cartSlice = createSlice({
     clearCart: (state) => {
       state.items = [];
       localStorage.removeItem("cart");
-    },
-
-    checkout: (state) => {
-      axios
-        .post("http://localhost:5000/orders", {
-          data: {
-            items: state.items,
-            total: state.totalAmount,
-          },
-        })
-        .then(() => {
-          state.items = [];
-          localStorage.removeItem("cart");
-          state.totalAmount = 0;
-        })
-        .catch((error) =>
-          console.error("Błąd podczas finalizacji zamówienia:", error)
-        );
+      state.totalAmount = 0;
     },
   },
 });
+export const checkout = createAsyncThunk(
+  "cart/checkout",
+  async (user_id: number, { dispatch, getState }) => {
+    const state: RootState = getState();
+    const cart: { items: CartItem[]; totalAmount: number } = state.cart;
 
-export const {
-  addToCart,
-  removeFromCart,
-  clearCart,
-  updateQuantity,
-  checkout,
-} = cartSlice.actions;
+    console.log(
+      "Wysyłane dane do /orders:",
+      JSON.stringify(
+        {
+          user_id,
+          items: cart.items,
+          total: cart.totalAmount,
+        },
+        null,
+        2
+      )
+    );
+
+    const payload = {
+      user_id,
+      items: cart.items.map(({ id, name, price, quantity }) => ({
+        id,
+        name,
+        price: Number(price),
+        quantity,
+      })),
+      total: cart.totalAmount,
+    };
+
+    console.log("Wysyłane dane do /orders:", JSON.stringify(payload, null, 2));
+
+    try {
+      await axios.post("http://localhost:5000/orders", payload);
+      dispatch(clearCart());
+    } catch (error) {
+      console.error("Błąd podczas składania zamówienia:", error);
+    }
+  }
+);
+
+export const { addToCart, removeFromCart, clearCart, updateQuantity } =
+  cartSlice.actions;
 export default cartSlice.reducer;

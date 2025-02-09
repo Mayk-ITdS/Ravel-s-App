@@ -1,118 +1,158 @@
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+import { useDispatch } from "react-redux";
+import { loginUser } from "../Store/authSlice";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
   Container,
-  FormControl,
-  InputLabel,
-  Input,
-  FormHelperText,
+  TextField,
   Typography,
-  Collapse,
+  Paper,
 } from "@mui/material";
-import { loginUser } from "../Store/authSlice";
-import Register from "./Register";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "../Store/store";
-import { useNavigate } from "react-router-dom";
-
-const schema = yup.object({
-  email: yup
-    .string()
-    .email("Nieprawidłowy email")
-    .required("Email jest wymagany"),
-  password: yup.string().required("Hasło jest wymagane"),
-});
 
 const Login: React.FC = () => {
-  const [showRegister, setShowRegister] = useState(false);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: yupResolver(schema),
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const onSubmit = async (data: { email: string; password: string }) => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const resultAction = await dispatch(loginUser(data));
-      console.log("to jest obiekt z danymi", resultAction.payload);
+      const resultAction = await dispatch(
+        loginUser({ email, password }) as any
+      );
       if (loginUser.fulfilled.match(resultAction)) {
-        console.log("✅ Logowanie powiodło się:", resultAction.payload);
         navigate("/");
-        console.log("Stan Redux po logowaniu:", resultAction.payload);
       } else {
-        console.error("❌ Logowanie nie powiodło się:", resultAction.payload);
+        setError("Nieprawidłowy email lub hasło");
       }
-    } catch (error) {
-      console.error("⚠️ Wystąpił błąd logowania:", error);
+    } catch (err) {
+      setError("Wystąpił błąd logowania.");
     }
   };
 
   return (
-    <Container maxWidth="xs">
-      <Box
-        sx={{
-          mt: 10,
-          height: "100vh",
-
-          textAlign: "center",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <Typography variant="h5" sx={{ mb: 2 }}>
-          Logowanie
-        </Typography>
-
-        <Box
-          component="form"
-          sx={{ width: "100%" }}
-          onSubmit={handleSubmit(onSubmit)}
+    <Box
+      sx={{
+        height: "100vh",
+        width: "100vw",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #050505, #1a1a1a)",
+        fontFamily: "'Orbitron', sans-serif",
+      }}
+    >
+      <Container maxWidth="xs">
+        <Paper
+          elevation={15}
+          sx={{
+            padding: 5,
+            borderRadius: 3,
+            backgroundColor: "#121212",
+            color: "#fff",
+            boxShadow: "0px 0px 30px 5px rgba(0, 162, 255, 0.8)",
+            textAlign: "center",
+          }}
         >
-          <FormControl fullWidth margin="normal" variant="standard">
-            <InputLabel htmlFor="email">Email</InputLabel>
-            <Input id="email" type="email" {...register("email")} />
-            <FormHelperText error>{errors.email?.message}</FormHelperText>
-          </FormControl>
-
-          <FormControl fullWidth margin="normal" variant="standard">
-            <InputLabel htmlFor="password">Hasło</InputLabel>
-            <Input id="password" type="password" {...register("password")} />
-            <FormHelperText error>{errors.password?.message}</FormHelperText>
-          </FormControl>
-
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2 }}
+          <Typography
+            variant="h4"
+            sx={{
+              color: "#00A2FF",
+              fontWeight: "bold",
+              textShadow: "0px 0px 15px rgba(0, 162, 255, 1)",
+              letterSpacing: "2px",
+              fontFamily: "'Orbitron', sans-serif",
+            }}
           >
             Zaloguj się
-          </Button>
-        </Box>
-
-        <Button
-          sx={{ mt: 2, textTransform: "none" }}
-          color="secondary"
-          onClick={() => setShowRegister(!showRegister)}
-        >
-          Not registered yet?
-        </Button>
-
-        <Collapse in={showRegister} timeout="auto" unmountOnExit>
-          <Register />
-        </Collapse>
-      </Box>
-    </Container>
+          </Typography>
+          <form onSubmit={handleLogin}>
+            <TextField
+              label="Email"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              InputProps={{
+                sx: {
+                  color: "#fff",
+                  fontFamily: "'Rajdhani', sans-serif",
+                  fontSize: "1.2rem",
+                  border: "1px solid #00A2FF",
+                  borderRadius: "8px",
+                  boxShadow: "0px 0px 15px rgba(0, 162, 255, 0.6)",
+                },
+              }}
+              sx={{
+                "& label.Mui-focused": { color: "#00A2FF" },
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": { borderColor: "#00A2FF" },
+                },
+              }}
+            />
+            <TextField
+              label="Hasło"
+              type="password"
+              variant="outlined"
+              fullWidth
+              margin="normal"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              InputProps={{
+                sx: {
+                  color: "#fff",
+                  fontFamily: "'Rajdhani', sans-serif",
+                  fontSize: "1.2rem",
+                  border: "1px solid #00A2FF",
+                  borderRadius: "8px",
+                  boxShadow: "0px 0px 15px rgba(0, 162, 255, 0.6)",
+                },
+              }}
+              sx={{
+                "& label.Mui-focused": { color: "#00A2FF" },
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": { borderColor: "#00A2FF" },
+                },
+              }}
+            />
+            {error && (
+              <Typography
+                color="error"
+                sx={{
+                  mt: 2,
+                  fontFamily: "'Rajdhani', sans-serif",
+                  fontSize: "1.2rem",
+                }}
+              >
+                {error}
+              </Typography>
+            )}
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              sx={{
+                mt: 3,
+                backgroundColor: "#00A2FF",
+                color: "#fff",
+                fontWeight: "bold",
+                fontSize: "1.2rem",
+                fontFamily: "'Orbitron', sans-serif",
+                boxShadow: "0px 0px 20px rgba(0, 162, 255, 0.8)",
+                "&:hover": { backgroundColor: "#0080C0" },
+              }}
+            >
+              ZALOGUJ SIĘ
+            </Button>
+          </form>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

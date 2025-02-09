@@ -38,8 +38,16 @@ const Shop: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useDispatch();
+
   useEffect(() => {
     const fetchProducts = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("🔴 Brak tokena! Użytkownik nie jest zalogowany.");
+        return;
+      }
+
+      console.log("🟢 Używam tokena do pobierania danych:", token);
       try {
         const [responseProducts, responseEvents] = await Promise.all([
           axios.get("http://localhost:5000/products"),

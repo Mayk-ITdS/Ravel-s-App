@@ -1,11 +1,13 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { AppDispatch } from "./store";
 
 interface User {
   id: number;
   username: string;
   email: string;
   password: string;
+  isAdmin: boolean;
 }
 
 interface AuthState {
@@ -14,10 +16,11 @@ interface AuthState {
   loading: boolean;
   error: string | null;
 }
-
+const savedToken = localStorage.getItem("token");
+const savedUser = localStorage.getItem("user");
 const initialState: AuthState = {
-  user: null,
-  token: null,
+  user: savedUser ? JSON.parse(savedUser) : null,
+  token: savedToken || null,
   loading: false,
   error: null,
 };
@@ -34,22 +37,45 @@ export const loginUser = createAsyncThunk(
         password,
       });
       const { user, token } = response.data;
+      console.log("🔵 Otrzymany token:", token);
+      console.log("🔵 Otrzymany user:", user);
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       console.log(response.data);
       return { user, token };
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response) {
-        return rejectWithValue(error.response.data);
-      }
-      return rejectWithValue({ error: "Something went wrong" });
+    } catch (error: any) {
+      console.error(
+        "🔴 Błąd logowania:",
+        error.response?.data || error.message
+      );
+      return rejectWithValue(error.response?.data || "Błąd logowania");
     }
   }
 );
+export const restoreSession = () => (dispatch: AppDispatch) => {
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
+
+  if (token && user) {
+    const parsedUser = JSON.parse(user);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+    dispatch(setSession({ user: parsedUser, token }));
+  }
+};
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    setSession: (
+      state,
+      action: PayloadAction<{ user: any; token: string | null }>
+    ) => {
+      state.user = action.payload.user;
+      state.token = action.payload.token;
+    },
     logout: (state) => {
       state.user = null;
       state.token = null;
@@ -73,5 +99,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { setSession, logout } = authSlice.actions;
 export default authSlice.reducer;
