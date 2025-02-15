@@ -1,40 +1,29 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
-import { AppDispatch, RootState } from "../Store/store";
+import { AppDispatch, RootState } from "../../Store/store";
 import {
   addToCart,
-  removeFromCart,
-  updateQuantity,
   clearCart,
   checkout,
   CartItem,
-} from "../Store/cartSlice";
+} from "../../Store/cartSlice";
 import {
   Box,
   Button,
   Typography,
   List,
-  ListItem,
-  ListItemText,
-  IconButton,
   Divider,
   Grid,
   Card,
   CardMedia,
   CardContent,
-  Select,
-  MenuItem,
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import { Product } from "../types/types";
+import { Product } from "../../types/types";
+import CartItemsList from "./CartItemsList";
 
-interface CartProps {
-  products?: Product[];
-}
-
-const Cart: React.FC<CartProps> = ({ products = [] }) => {
+const Cart: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const totalAmount = useSelector((state: RootState) => state.cart.totalAmount);
@@ -83,65 +72,28 @@ const Cart: React.FC<CartProps> = ({ products = [] }) => {
           <Box
             sx={{
               backgroundColor: "#FFF",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
               padding: "20px",
               borderRadius: "8px",
               boxShadow: 2,
+              width: "80%",
             }}
           >
-            <List>
+            <List
+              sx={{
+                maxWidth: "335",
+                width: "80%",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               {cartItems.map((item: CartItem) => (
-                <ListItem
-                  key={item.id}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "16px",
-                    borderBottom: "1px solid #ddd",
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    sx={{ width: 100, height: 100, borderRadius: "8px", mr: 2 }}
-                    image={item.image}
-                  />
-                  <ListItemText
-                    primary={
-                      <Typography variant="h6" fontWeight="bold">
-                        {item.name}
-                      </Typography>
-                    }
-                    secondary={`${item.price} zł`}
-                  />
-                  <Select
-                    value={item.quantity}
-                    onChange={(e) =>
-                      dispatch(
-                        updateQuantity({
-                          id: item.id,
-                          type: item.type,
-                          quantity: Number(e.target.value),
-                        })
-                      )
-                    }
-                    sx={{ width: 70, mr: 2 }}
-                  >
-                    {[1, 2, 3, 4, 5].map((q) => (
-                      <MenuItem key={q} value={q}>
-                        {q}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  <IconButton
-                    onClick={() =>
-                      dispatch(removeFromCart({ id: item.id, type: item.type }))
-                    }
-                    sx={{ color: "red" }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItem>
+                <CartItemsList key={item.id} item={item} />
               ))}
             </List>
+
             <Divider sx={{ my: 2 }} />
             {cartItems.length > 0 && (
               <Button
@@ -149,7 +101,7 @@ const Cart: React.FC<CartProps> = ({ products = [] }) => {
                 variant="contained"
                 color="error"
                 onClick={() => dispatch(clearCart())}
-                sx={{ fontWeight: "bold" }}
+                sx={{ fontWeight: "bold", width: "70%" }}
               >
                 WYCZYŚĆ KOSZYK
               </Button>
@@ -178,7 +130,7 @@ const Cart: React.FC<CartProps> = ({ products = [] }) => {
             </Typography>
             <Divider sx={{ my: 2 }} />
             <Typography variant="h5" fontWeight="bold">
-              Razem: {totalAmount.toFixed(2)} zł
+              Razem: {totalAmount.toFixed(2)} $
             </Typography>
             <Button
               fullWidth
@@ -191,7 +143,6 @@ const Cart: React.FC<CartProps> = ({ products = [] }) => {
           </Box>
         </Grid>
       </Grid>
-
       <Typography variant="h5" fontWeight="bold" textAlign="left" mt={4}>
         Popularne produkty 🎵
       </Typography>
@@ -203,18 +154,24 @@ const Cart: React.FC<CartProps> = ({ products = [] }) => {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                padding: 2,
+                padding: "2, 5%",
+                width: "50%",
+                maxWsidth: "335px",
               }}
             >
               <CardMedia
                 component="img"
-                sx={{ width: 150, height: 150 }}
+                sx={{
+                  width: "80%",
+                  height: "60%",
+                  marginTop: "20px",
+                }}
                 image={product.image}
               />
               <CardContent sx={{ textAlign: "center" }}>
                 <Typography variant="h6">{product.name}</Typography>
                 <Typography variant="body1" color="text.secondary">
-                  {product.price} zł
+                  {product.price} $
                 </Typography>
                 <Button
                   variant="contained"

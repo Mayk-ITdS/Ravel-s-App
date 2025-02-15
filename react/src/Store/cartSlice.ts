@@ -35,6 +35,7 @@ const cartSlice = createSlice({
         ? (existingItem.quantity += 1)
         : state.items.push({ ...action.payload, quantity: 1 });
       localStorage.setItem("cart", JSON.stringify(state.items));
+      state.totalAmount += action.payload.price * action.payload.quantity;
     },
     removeFromCart: (
       state,

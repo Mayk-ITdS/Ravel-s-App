@@ -4,7 +4,8 @@ export interface Product {
   description: string;
   price: number;
   category?: string;
-  image: string | null | File | any; // 🛠️ Zmieniamy BLOB na Base64 string | null
+  image: string | null | File | any;
+  quantity: number;
   onSave: () => void;
 }
 
@@ -14,6 +15,6 @@ export interface Event {
   description: string;
   date?: string;
   location?: string;
-  image?: string | null | File | any; // 🛠️ Zmieniamy BLOB na Base64 string | null
+  image?: string | null | File | any;
   onSave: () => void;
 }

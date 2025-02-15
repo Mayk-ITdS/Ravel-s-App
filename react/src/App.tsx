@@ -16,7 +16,7 @@ import Footer from "./pages/Footer";
 import AdminPanel from "./components/AdminPanel/AdminPanel";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import Cart from "./pages/Cart";
+import Cart from "./components/Cart/Cart";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "./Store/store";
 import { setSession } from "./Store/authSlice";
