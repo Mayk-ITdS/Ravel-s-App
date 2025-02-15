@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardMedia,
+  CardActions,
 } from "@mui/material";
 import AddEditItemDialog from "./AddEditItemDialog";
 import { Product, Event } from "../../types/types";
@@ -43,7 +44,6 @@ const AdminPanel: React.FC = () => {
   const [editItem, setEditItem] = useState<Product | Event | null>(null);
   const [editType, setEditType] = useState<EditType>("product");
 
-  // ✅ Fetch products & events using Axios
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -55,7 +55,7 @@ const AdminPanel: React.FC = () => {
         setProducts(productsRes.data);
         setEvents(eventsRes.data);
       } catch (error) {
-        console.error("❌ Error fetching data:", error);
+        console.error("Error fetching data:", error);
       }
     };
     fetchData();
@@ -63,7 +63,7 @@ const AdminPanel: React.FC = () => {
 
   const handleOpenDialog = (type: EditType, item?: Product | Event | null) => {
     setEditType(type);
-    setEditItem(item ?? getDefaultItem(type)); // Set default item if none exists
+    setEditItem(item ?? getDefaultItem(type));
     setOpenDialog(true);
   };
   const handleDelete = async (type: "products" | "events", id: number) => {
@@ -76,9 +76,9 @@ const AdminPanel: React.FC = () => {
         setEvents((prev) => prev.filter((e) => e.id !== id));
       }
 
-      console.log("✅ Usunięto:", id);
+      console.log("Usunięto:", id);
     } catch (error) {
-      console.error("❌ Błąd usuwania:", error);
+      console.error("Błąd usuwania:", error);
     }
   };
 
@@ -89,46 +89,38 @@ const AdminPanel: React.FC = () => {
     const url = isEditing
       ? `http://localhost:5000/${editType}s/${editItem.id}`
       : `http://localhost:5000/${editType}s`;
-
-    const formDataToSend = new FormData();
-
-    Object.entries(newItem).forEach(([key, value]) => {
-      if (key === "image" && value instanceof File) {
-        formDataToSend.append("file", value); // Wysyłamy `file`, nie `image`
-      } else if (value !== null && value !== undefined) {
-        formDataToSend.append(key, value.toString());
-      }
-    });
-    console.log(formDataToSend);
+    console.log("Wysyłane dane do backendu:", newItem);
     try {
       const { data: savedItem } = await axios({
         method: isEditing ? "PUT" : "POST",
         url,
-        data: formDataToSend,
-        headers: { "Content-Type": "multipart/form-data" },
+        data: newItem,
+        headers: { "Content-Type": "application/json" },
       });
 
-      if (savedItem.image) {
-        savedItem.image = savedItem.image; // Zwracamy poprawny URL
-      }
+      console.log("Otrzymana odpowiedź z backendu:", savedItem);
 
       if (editType === "product") {
         setProducts((prev) =>
           isEditing
-            ? prev.map((p) => (p.id === savedItem.id ? savedItem : p))
+            ? prev.map((p) =>
+                p.id === savedItem.id ? { ...p, ...savedItem } : p
+              )
             : [...prev, savedItem]
         );
       } else {
         setEvents((prev) =>
           isEditing
-            ? prev.map((e) => (e.id === savedItem.id ? savedItem : e))
+            ? prev.map((e) =>
+                e.id === savedItem.id ? { ...e, ...savedItem } : e
+              )
             : [...prev, savedItem]
         );
       }
 
       setOpenDialog(false);
     } catch (error) {
-      console.error("❌ Błąd API:", error);
+      console.error("Błąd API:", error);
     }
   };
 
@@ -160,25 +152,53 @@ const AdminPanel: React.FC = () => {
       <Grid container spacing={3}>
         {products.map((product) => (
           <Grid item xs={12} sm={6} md={4} key={product.id}>
-            <Card>
+            <Card sx={{ maxWidth: 345 }}>
               <CardMedia
-                component="img"
-                height="140"
+                sx={{ height: 140 }}
                 image={product.image}
-                alt={product.name}
+                title="Event"
               />
               <CardContent>
-                <Typography>{product.name}</Typography>
-                <Button onClick={() => handleOpenDialog("product", product)}>
-                  Edytuj
+                <Typography gutterBottom variant="h5" component="div">
+                  {product.name}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {product.description}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {product.price} $
+                </Typography>
+              </CardContent>
+              <CardActions
+                sx={{ display: "flex", justifyContent: "space-between" }}
+              >
+                <Button
+                  size="small"
+                  sx={{
+                    color: "blue",
+
+                    fontWeight: "700",
+                    border: "1px, solid, grey",
+                    backgroundColor: "whitesmoke",
+                  }}
+                  onClick={() => handleOpenDialog("product")}
+                >
+                  Edit
                 </Button>
                 <Button
-                  color="error"
+                  size="small"
+                  sx={{
+                    color: "rosybrown",
+
+                    fontWeight: "700",
+                    border: "1px, solid, grey",
+                    backgroundColor: "whitesmoke",
+                  }}
                   onClick={() => handleDelete("products", product.id)}
                 >
-                  Usuń
+                  Delete
                 </Button>
-              </CardContent>
+              </CardActions>
             </Card>
           </Grid>
         ))}
@@ -190,26 +210,50 @@ const AdminPanel: React.FC = () => {
       <Grid container spacing={3}>
         {events.map((event) => (
           <Grid item xs={12} sm={6} md={4} key={event.id}>
-            <Card>
+            <Card sx={{ maxWidth: 345 }}>
               <CardMedia
-                component="img"
-                height="140"
+                sx={{ height: 140 }}
                 image={event.image}
-                alt={event.title}
+                title="Event"
               />
-
               <CardContent>
-                <Typography>{event.title}</Typography>
-                <Button onClick={() => handleOpenDialog("event", event)}>
-                  Edytuj
+                <Typography gutterBottom variant="h5" component="div">
+                  {event.title}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {event.description}
+                </Typography>
+              </CardContent>
+              <CardActions
+                sx={{ display: "flex", justifyContent: "space-between" }}
+              >
+                <Button
+                  size="small"
+                  sx={{
+                    color: "blue",
+
+                    fontWeight: "700",
+                    border: "1px, solid, grey",
+                    backgroundColor: "whitesmoke",
+                  }}
+                  onClick={() => handleOpenDialog("event")}
+                >
+                  Edit
                 </Button>
                 <Button
-                  color="error"
+                  size="small"
+                  sx={{
+                    color: "rosybrown",
+
+                    fontWeight: "700",
+                    border: "1px, solid, grey",
+                    backgroundColor: "whitesmoke",
+                  }}
                   onClick={() => handleDelete("events", event.id)}
                 >
-                  Usuń
+                  Delete
                 </Button>
-              </CardContent>
+              </CardActions>
             </Card>
           </Grid>
         ))}

@@ -11,14 +11,13 @@ import {
   CardMedia,
   CardContent,
   CircularProgress,
-  CardActions,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import heroImage from "../assets/hero.jpg";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "../Store/store";
-// Definicja typu produktu
+
 interface Product {
   id: number;
   name: string;
@@ -39,7 +38,6 @@ interface Event {
 }
 
 const Home: React.FC = () => {
-  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -50,7 +48,6 @@ const Home: React.FC = () => {
     return <Navigate to="/login" />;
   }
   useEffect(() => {
-    // Pobranie produktów z backendu
     const fetchData = async () => {
       try {
         const [productsRes, eventsRes] = await Promise.all([
@@ -74,7 +71,6 @@ const Home: React.FC = () => {
     <Box
       sx={{ backgroundColor: "#1E1E1E", color: "#E5B05E", minHeight: "100vh" }}
     >
-      {/* Hero Section */}
       <Box
         sx={{
           backgroundImage: `url(${heroImage})`,
@@ -126,7 +122,6 @@ const Home: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Kategorie */}
       <Container sx={{ mt: 6 }}>
         <Typography variant="h4" fontWeight="bold" textAlign="center" mb={4}>
           Sklep Ravel'a
@@ -145,7 +140,7 @@ const Home: React.FC = () => {
         >
           Najnowsze propozycje
         </Typography>
-        {/* Obsługa błędów i ładowania */}
+
         {loading ? (
           <Box display="flex" justifyContent="center">
             <CircularProgress />
@@ -192,7 +187,6 @@ const Home: React.FC = () => {
         )}
       </Container>
 
-      {/* Sekcja wydarzeń */}
       <Container sx={{ mt: 6 }}>
         <Typography variant="h4" fontWeight="bold" textAlign="center" mb={4}>
           Najbliższe Koncerty

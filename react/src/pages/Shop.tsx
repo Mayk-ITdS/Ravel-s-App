@@ -79,7 +79,6 @@ const Shop: React.FC = () => {
         Sklep Ravel'a - {category?.toUpperCase()}
       </Typography>
 
-      {/* Obsługa ładowania i błędów */}
       {loading ? (
         <Box
           display="flex"

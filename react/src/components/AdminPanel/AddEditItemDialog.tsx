@@ -53,46 +53,74 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
   );
   const [preview, setPreview] = useState<string | null>(null);
 
-  // Sync formData with item when dialog opens
   useEffect(() => {
+    console.log("Aktualizacja formularza z:", item);
     if (item) {
-      setFormData({ ...item });
+      setFormData((prevState) =>
+        type === "product"
+          ? ({
+              ...prevState,
+              id: item.id ?? 0,
+              name: (item as Product).name || "",
+              description: item.description || "",
+              price: (item as Product).price ?? 0,
+              category: (item as Product).category || "vinyl",
+              image: (item as Product).image || null,
+            } as Product)
+          : ({
+              ...prevState,
+              id: item.id ?? 0,
+              title: (item as Event).title || "",
+              description: item.description || "",
+              date: (item as Event).date || "",
+              location: (item as Event).location || "",
+              image: item.image ?? null,
+            } as Event)
+      );
+
       if (item.image && typeof item.image === "string") {
-        setPreview(item.image); // Load existing image preview
+        setPreview(item.image);
       }
     }
   }, [item]);
 
-  //  Handle input changes
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value || "" }));
   };
 
-  //  Handle Select Change
   const handleSelectChange = (e: SelectChangeEvent) => {
     setFormData((prev) => ({ ...prev, category: e.target.value }));
   };
-
-  //  Handle Image Upload
-  const handleUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+          resolve(reader.result as string);
+        } else {
+          reject(new Error("Nie udało się przekonwertować obrazu na base64"));
+        }
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
+    });
+  };
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     console.log(file);
     if (!file) return;
 
+    const convertedToBase64 = await convertFileToBase64(file);
+
     setFormData((prev) => ({
       ...prev,
-      image: file,
+      image: convertedToBase64,
     }));
-    console.log(file);
-    // Generate preview URL
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    setPreview(convertedToBase64);
+    console.log(convertedToBase64);
   };
 
   return (
@@ -101,17 +129,26 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
         {item ? "Edytuj" : "Dodaj"} {type === "product" ? "produkt" : "event"}
       </DialogTitle>
       <DialogContent>
-        {/* 🔥 NAME / TITLE */}
-        <TextField
-          name="name"
-          label="Nazwa"
-          fullWidth
-          margin="dense"
-          value={"name" in formData ? formData.name : (formData as Event).title}
-          onChange={handleChange}
-        />
+        {type === "product" ? (
+          <TextField
+            name="name"
+            label="Nazwa"
+            fullWidth
+            margin="dense"
+            value={(formData as Product).name}
+            onChange={handleChange}
+          />
+        ) : (
+          <TextField
+            name="title"
+            label="Tytuł"
+            fullWidth
+            margin="dense"
+            value={(formData as Event).title}
+            onChange={handleChange}
+          />
+        )}
 
-        {/* 🔥 DESCRIPTION */}
         <TextField
           name="description"
           label="Opis"
@@ -122,7 +159,6 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
           multiline
         />
 
-        {/*  PRODUCT-SPECIFIC FIELDS */}
         {type === "product" ? (
           <>
             <TextField
@@ -149,7 +185,6 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
           </>
         ) : (
           <>
-            {/* EVENT-SPECIFIC FIELDS */}
             <TextField
               name="date"
               label="Data"
@@ -182,7 +217,10 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
         <input type="file" accept="image/*" onChange={handleUploadImage} />
 
         <Button
-          onClick={() => onSave(formData)}
+          onClick={() => {
+            console.log("Wysylane dane:", formData);
+            onSave(formData);
+          }}
           variant="contained"
           color="primary"
           fullWidth

@@ -65,14 +65,7 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute token={token && user?.isAdmin ? token : null}>
-                <AdminPanel />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="/login" element={<Login />} />
           <Route path="*" element={<Navigate to="/" replace />} />{" "}
         </Routes>

@@ -45,10 +45,7 @@ export const loginUser = createAsyncThunk(
       console.log(response.data);
       return { user, token };
     } catch (error: any) {
-      console.error(
-        "🔴 Błąd logowania:",
-        error.response?.data || error.message
-      );
+      console.error("Błąd logowania:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data || "Błąd logowania");
     }
   }

@@ -12,13 +12,9 @@ import {
   FormHelperText,
   Typography,
 } from "@mui/material";
-import { useDispatch } from "react-redux";
-import { loginUser } from "../Store/authSlice";
 import { useNavigate } from "react-router-dom";
-import { AppDispatch } from "../Store/store";
 import axios from "axios";
 
-// 🔹 Schemat walidacji z Yup
 const schema = yup.object({
   username: yup.string().required("Nazwa użytkownika jest wymagana"),
   email: yup
@@ -37,7 +33,6 @@ const schema = yup.object({
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
 
   const {
     register,
@@ -63,18 +58,18 @@ const Register: React.FC = () => {
           password: data.password,
         },
         {
-          headers: { "Content-Type": "application/json" }, // Dodaj nagłówek
+          headers: { "Content-Type": "application/json" },
         }
       );
 
       if (response.status === 201) {
-        console.log("✅ Rejestracja powiodła się:", response.data);
+        console.log(" Rejestracja powiodła się:", response.data);
         navigate("/");
       } else {
-        console.error("❌ Rejestracja nie powiodła się:", response.data);
+        console.error(" Rejestracja nie powiodła się:", response.data);
       }
     } catch (error) {
-      console.error("⚠️ Wystąpił błąd podczas rejestracji:", error);
+      console.error(" Wystąpił błąd podczas rejestracji:", error);
     }
   };
 

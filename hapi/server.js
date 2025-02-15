@@ -297,7 +297,6 @@ server.route({
         console.log(sql);
         console.log("Wartości do wstawienia:", values);
 
-        // Wykonanie zapytania z wartościami
         await db.execute(sql, values);
       }
 
@@ -348,51 +347,43 @@ server.route({
   path: "/{type}/{id?}",
   options: {
     payload: {
-      output: "stream",
       parse: true,
-      allow: "multipart/form-data",
-      multipart: true,
+      allow: "application/json",
     },
   },
   handler: async (request, h) => {
     try {
       const { type, id } = request.params;
       const payload = request.payload;
-      let imageUrl = null;
-      console.log(request.params);
+      console.log("Otrzymane dane z frontendu:", payload);
+
+      console.log("Otrzymane parametry:", request.params);
       if (type !== "products" && type !== "events") {
         return h
           .response({ error: "Invalid type. Use 'products' or 'events'." })
           .code(400);
       }
-
-      let img_array = [];
-      if (payload.file) {
-        for await (const el of payload.file) {
-          img_array.push(el);
+      if (payload.image) {
+        try {
+          payload.image = Buffer.from(payload.image.split(",")[1], "base64");
+          console.log(payload.image);
+        } catch (error) {
+          console.error("Blad konwersji obrazu", error);
+          return h.response({ error: "Invalid image format" }).code(400);
         }
-
-        console.log(img_array);
-        console.log(Buffer.concat(img_array));
-        // const filename = `${Date.now()}-${payload.file.hapi.filename}`;
-        // const filePath = path.join(uploadDir, filename);
-        // const fileStream = fs.createWriteStream(filePath);
-        // await payload.file.pipe(fileStream);
-
-        // imageUrl = `/assets/${filename}`;
+      } else {
+        payload.image = null;
       }
-
       if (id) {
-        //  **Aktualizacja produktu / eventu**
         if (type === "products") {
           await db.execute(
             "UPDATE products SET name=?, description=?, price=?, category=?, image=? WHERE id=?",
             [
-              payload.name,
-              payload.description,
-              payload.price,
-              payload.category,
-              Buffer.concat(img_array),
+              payload.name ?? null,
+              payload.description ?? null,
+              payload.price ?? null,
+              payload.category ?? null,
+              payload.image,
               id,
             ]
           );
@@ -400,11 +391,11 @@ server.route({
           await db.execute(
             "UPDATE events SET title=?, description=?, date=?, location=?, image=? WHERE id=?",
             [
-              payload.title,
-              payload.description,
-              payload.date,
-              payload.location,
-              Buffer.concat(img_array),
+              payload.title ?? null,
+              payload.description ?? null,
+              payload.date ?? null,
+              payload.location ?? null,
+              payload.image,
               id,
             ]
           );
@@ -415,35 +406,33 @@ server.route({
         });
       }
 
-      // **Dodawanie nowego**
       let result;
       if (type === "products") {
         [result] = await db.execute(
           "INSERT INTO products (name, description, price, category, image) VALUES (?, ?, ?, ?, ?)",
           [
-            payload.name,
-            payload.description,
-            payload.price,
-            payload.category,
-            imageUrl,
+            payload.name ?? null,
+            payload.description ?? null,
+            payload.price ?? null,
+            payload.category ?? null,
+            payload.image,
           ]
         );
       } else {
         [result] = await db.execute(
           "INSERT INTO events (title, description, date, location, image) VALUES (?, ?, ?, ?, ?)",
           [
-            payload.title,
-            payload.description,
-            payload.date,
-            payload.location,
-            imageUrl,
+            payload.title ?? null,
+            payload.description ?? null,
+            payload.date ?? null,
+            payload.location ?? null,
+            payload.image,
           ]
         );
       }
 
       return h.response({
         message: `${type.slice(0, -1)} dodany`,
-        id: result.insertId,
       });
     } catch (error) {
       console.error("Błąd serwera:", error);
