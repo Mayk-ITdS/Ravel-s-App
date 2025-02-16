@@ -9,7 +9,9 @@ import {
   TextField,
   Typography,
   Paper,
+  Collapse,
 } from "@mui/material";
+import Register from "./Register";
 
 const Login: React.FC = () => {
   const dispatch = useDispatch();
@@ -17,6 +19,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showRegister, setShowRegister] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +81,15 @@ const Login: React.FC = () => {
               margin="normal"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              InputLabelProps={{
+                sx: {
+                  fontSize: "0.7rem",
+                  color: "#00A2FF",
+                  fontWeight: "bold",
+                  letterSpacing: "1px",
+                  marginBottom: "70px",
+                },
+              }}
               InputProps={{
                 sx: {
                   color: "#fff",
@@ -103,6 +115,15 @@ const Login: React.FC = () => {
               margin="normal"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              InputLabelProps={{
+                sx: {
+                  fontSize: "0.7rem",
+                  color: "#00A2FF",
+                  fontWeight: "bold",
+                  letterSpacing: "1px",
+                  marginBottom: "70px",
+                },
+              }}
               InputProps={{
                 sx: {
                   color: "#fff",
@@ -150,6 +171,24 @@ const Login: React.FC = () => {
               ZALOGUJ SIĘ
             </Button>
           </form>
+          <Button
+            sx={{
+              mt: 3,
+              backgroundColor: "#00A2FF",
+              color: "#fff",
+              fontWeight: "500",
+              fontSize: "1rem",
+              fontFamily: "'Orbitron', sans-serif",
+              boxShadow: "0px 0px 20px rgba(0, 162, 255, 0.8)",
+              "&:hover": { backgroundColor: "#0080C0" },
+            }}
+            onClick={() => setShowRegister((prev) => !prev)}
+          >
+            {showRegister ? "Login if You have an account" : "register"}
+          </Button>
+          <Collapse in={showRegister}>
+            <Register />
+          </Collapse>
         </Paper>
       </Container>
     </Box>

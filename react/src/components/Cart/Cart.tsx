@@ -95,7 +95,7 @@ const Cart: React.FC = () => {
             </List>
 
             <Divider sx={{ my: 2 }} />
-            {cartItems.length > 0 && (
+            {cartItems.length > 0 ? (
               <Button
                 fullWidth
                 variant="contained"
@@ -105,6 +105,10 @@ const Cart: React.FC = () => {
               >
                 WYCZYŚĆ KOSZYK
               </Button>
+            ) : (
+              <Typography variant="h6" fontWeight={550} textAlign="center">
+                Nothing in Your cart yet
+              </Typography>
             )}
           </Box>
         </Grid>
@@ -155,16 +159,17 @@ const Cart: React.FC = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 padding: "2, 5%",
-                width: "50%",
+                width: "80%",
                 maxWsidth: "335px",
               }}
             >
               <CardMedia
                 component="img"
                 sx={{
-                  width: "80%",
-                  height: "60%",
-                  marginTop: "20px",
+                  objectFit: "cover",
+
+                  height: "250px",
+                  padding: "15px 7%",
                 }}
                 image={product.image}
               />

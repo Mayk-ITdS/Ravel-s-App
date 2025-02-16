@@ -21,6 +21,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "./Store/store";
 import { setSession } from "./Store/authSlice";
 import axios from "axios";
+import Register from "./pages/Register";
 
 const ProtectedRoute: React.FC<{
   token: string | null;
@@ -67,6 +68,7 @@ const App: React.FC = () => {
           />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="*" element={<Navigate to="/" replace />} />{" "}
         </Routes>
         {token && <Footer />}

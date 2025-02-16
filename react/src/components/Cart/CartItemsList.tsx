@@ -30,7 +30,12 @@ const CartItemsList: React.FC<{ item: CartItem }> = ({ item }) => {
     >
       <CardMedia
         component="img"
-        sx={{ width: 100, height: 100, borderRadius: "8px", mr: 2 }}
+        sx={{
+          width: 100,
+          height: 100,
+          borderRadius: "8px",
+          mr: 2,
+        }}
         image={item.image}
       />
       <ListItemText

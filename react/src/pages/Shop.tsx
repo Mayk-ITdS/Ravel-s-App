@@ -43,7 +43,7 @@ const Shop: React.FC = () => {
     const fetchProducts = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.error("🔴 Brak tokena! Użytkownik nie jest zalogowany.");
+        console.error("Brak tokena! Użytkownik nie jest zalogowany.");
         return;
       }
 
@@ -105,6 +105,7 @@ const Shop: React.FC = () => {
                     }}
                   >
                     <CardMedia
+                      sx={{ objectFit: "cover" }}
                       component="img"
                       height="250"
                       image={product.image}
