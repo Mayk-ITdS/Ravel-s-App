@@ -5,6 +5,7 @@ import {
   Route,
   Routes,
   Navigate,
+  Outlet,
 } from "react-router-dom";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
@@ -25,9 +26,8 @@ import Register from "./pages/Register";
 
 const ProtectedRoute: React.FC<{
   token: string | null;
-  children: React.ReactNode;
-}> = ({ token, children }) => {
-  return token ? <>{children}</> : <Navigate to="/login" replace />;
+}> = ({ token }) => {
+  return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 const App: React.FC = () => {
@@ -50,27 +50,24 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <Router>
         <CssBaseline />
+
         {token && <Header />}
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/works" element={<Works />} />
-          <Route path="/gallerie" element={<ImageManager />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/shop/:category" element={<Shop />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route
-            path="/user/dashboard"
-            element={
-              <ProtectedRoute token={token}>
-                <Dashboard user={user} />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/admin" element={<AdminPanel />} />
+          <Route element={<ProtectedRoute token={token} />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/works" element={<Works />} />
+            <Route path="/gallerie" element={<ImageManager />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/shop/:category" element={<Shop />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/user/dashboard" element={<Dashboard user={user} />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="*" element={<Navigate to="/" replace />} />{" "}
+          </Route>
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="*" element={<Navigate to="/" replace />} />{" "}
         </Routes>
+
         {token && <Footer />}
       </Router>
     </ThemeProvider>
