@@ -22,7 +22,7 @@ import {
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { Product } from "../../types/types";
 import CartItemsList from "./CartItemsList";
-
+const API_URL = import.meta.env.VITE_API_URL;
 const Cart: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const cartItems = useSelector((state: RootState) => state.cart.items);
@@ -39,7 +39,7 @@ const Cart: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/products");
+        const response = await axios.get(`${API_URL}/products`);
         setDefaultProducts(response.data);
       } catch (error) {
         console.error("Błąd pobierania domyślnych produktów:", error);

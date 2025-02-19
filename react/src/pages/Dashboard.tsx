@@ -38,7 +38,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [filter, setFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-
+  const API_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
     if (!currentUser) {
       navigate("/login");
@@ -55,14 +55,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
       try {
         const response = await axios.get(
-          `http://localhost:5000/orders?user_id=${currentUser.id}`,
+          `${API_URL}/orders?user_id=${currentUser.id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
         setOrders(response.data);
       } catch (error) {
-        console.error("❌ Błąd pobierania zamówień:", error);
+        console.error("Błąd pobierania zamówień:", error);
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           dispatch(logout());
           navigate("/login");

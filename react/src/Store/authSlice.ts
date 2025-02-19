@@ -16,6 +16,7 @@ interface AuthState {
   loading: boolean;
   error: string | null;
 }
+const API_URL = import.meta.env.VITE_API_URL;
 const savedToken = localStorage.getItem("token");
 const savedUser = localStorage.getItem("user");
 const initialState: AuthState = {
@@ -32,7 +33,7 @@ export const loginUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await axios.post("http://localhost:5000/login", {
+      const response = await axios.post(`${API_URL}/login`, {
         email,
         password,
       });

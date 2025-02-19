@@ -41,7 +41,7 @@ const Home: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
+  const API_URL = import.meta.env.VITE_API_URL;
   const user = useSelector((state: RootState) => state.auth.user);
   if (!user) {
     return <Navigate to="/login" />;
@@ -50,8 +50,8 @@ const Home: React.FC = () => {
     const fetchData = async () => {
       try {
         const [productsRes, eventsRes] = await Promise.all([
-          axios.get("http://localhost:5000/products"),
-          axios.get("http://localhost:5000/events"),
+          axios.get(`${API_URL}/products`),
+          axios.get(`${API_URL}/events`),
         ]);
 
         setProducts(productsRes.data);

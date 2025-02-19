@@ -43,13 +43,13 @@ const AdminPanel: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editItem, setEditItem] = useState<Product | Event | null>(null);
   const [editType, setEditType] = useState<EditType>("product");
-
+  const API_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [productsRes, eventsRes] = await Promise.all([
-          axios.get<Product[]>("http://localhost:5000/products"),
-          axios.get<Event[]>("http://localhost:5000/events"),
+          axios.get<Product[]>(`${API_URL}/products`),
+          axios.get<Event[]>(`${API_URL}/events`),
         ]);
 
         setProducts(productsRes.data);
@@ -63,14 +63,14 @@ const AdminPanel: React.FC = () => {
 
   const handleOpenDialog = (type: EditType, item?: Product | Event | null) => {
     setEditType(type);
-    setEditItem(item ?? getDefaultItem(type));
+    setEditItem(item ?? null);
     setOpenDialog(true);
   };
-  const handleDelete = async (type: "products" | "events", id: number) => {
+  const handleDelete = async (type: "product" | "event", id: number) => {
     try {
-      await axios.delete(`http://localhost:5000/${type}/${id}`);
+      await axios.delete(`${API_URL}/${type}/${id}`);
 
-      if (type === "products") {
+      if (type === "product") {
         setProducts((prev) => prev.filter((p) => p.id !== id));
       } else {
         setEvents((prev) => prev.filter((e) => e.id !== id));
@@ -87,8 +87,8 @@ const AdminPanel: React.FC = () => {
 
     const isEditing = Boolean(editItem.id);
     const url = isEditing
-      ? `http://localhost:5000/${editType}s/${editItem.id}`
-      : `http://localhost:5000/${editType}s`;
+      ? `${API_URL}/${editType}s/${editItem.id}`
+      : `${API_URL}/${editType}s`;
     console.log("Wysyłane dane do backendu:", newItem);
     try {
       const { data: savedItem } = await axios({
@@ -181,7 +181,7 @@ const AdminPanel: React.FC = () => {
                     border: "1px, solid, grey",
                     backgroundColor: "whitesmoke",
                   }}
-                  onClick={() => handleOpenDialog("product")}
+                  onClick={() => handleOpenDialog("product", product)}
                 >
                   Edit
                 </Button>
@@ -194,7 +194,7 @@ const AdminPanel: React.FC = () => {
                     border: "1px, solid, grey",
                     backgroundColor: "whitesmoke",
                   }}
-                  onClick={() => handleDelete("products", product.id)}
+                  onClick={() => handleDelete("product", product.id)}
                 >
                   Delete
                 </Button>
@@ -236,7 +236,7 @@ const AdminPanel: React.FC = () => {
                     border: "1px, solid, grey",
                     backgroundColor: "whitesmoke",
                   }}
-                  onClick={() => handleOpenDialog("event")}
+                  onClick={() => handleOpenDialog("event", event)}
                 >
                   Edit
                 </Button>
@@ -249,7 +249,7 @@ const AdminPanel: React.FC = () => {
                     border: "1px, solid, grey",
                     backgroundColor: "whitesmoke",
                   }}
-                  onClick={() => handleDelete("events", event.id)}
+                  onClick={() => handleDelete("event", event.id)}
                 >
                   Delete
                 </Button>

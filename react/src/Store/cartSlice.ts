@@ -14,7 +14,7 @@ export interface CartState {
   items: CartItem[];
   totalAmount: number;
 }
-
+const API_URL = import.meta.env.VITE_API_URL;
 const initialState: CartState = {
   items: JSON.parse(localStorage.getItem("cart") || "[]"),
   totalAmount: 0,
@@ -113,7 +113,7 @@ export const checkout = createAsyncThunk(
     console.log("Wysyłane dane do /orders:", JSON.stringify(payload, null, 2));
 
     try {
-      await axios.post("http://localhost:5000/orders", payload);
+      await axios.post(`${API_URL}/orders`, payload);
       dispatch(clearCart());
     } catch (error) {
       console.error("Błąd podczas składania zamówienia:", error);

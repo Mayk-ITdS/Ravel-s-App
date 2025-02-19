@@ -30,7 +30,7 @@ const schema = yup.object({
     .oneOf([yup.ref("password")], "Hasła muszą być identyczne")
     .required("Potwierdzenie hasła jest wymagane"),
 });
-
+const API_URL = import.meta.env.VITE_API_URL;
 const Register: React.FC = () => {
   const navigate = useNavigate();
 
@@ -51,7 +51,7 @@ const Register: React.FC = () => {
       console.log("Dane wysyłane do backendu:", data);
 
       const response = await axios.post(
-        "http://localhost:5000/register",
+        `${API_URL}/register`,
         {
           username: data.username,
           email: data.email,

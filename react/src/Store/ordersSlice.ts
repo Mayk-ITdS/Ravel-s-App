@@ -14,12 +14,12 @@ interface OrdersState {
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null | undefined;
 }
-
+const API_URL = import.meta.env.VITE_API_URL;
 export const fetchOrders = createAsyncThunk(
   "orders/fetchOrders",
   async (token: string, { rejectWithValue }) => {
     try {
-      const response = await axios.get("http://localhost:5000/orders", {
+      const response = await axios.get(`${API_URL}/orders`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;

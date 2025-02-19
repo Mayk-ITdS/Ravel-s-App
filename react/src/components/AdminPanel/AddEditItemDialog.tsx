@@ -60,21 +60,21 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
         type === "product"
           ? ({
               ...prevState,
-              id: item.id ?? 0,
+              id: item.id ?? null,
               name: (item as Product).name || "",
               description: item.description || "",
               price: (item as Product).price ?? 0,
               category: (item as Product).category || "vinyl",
-              image: (item as Product).image || null,
+              image: (item as Product).image,
             } as Product)
           : ({
               ...prevState,
-              id: item.id ?? 0,
+              id: item.id ?? null,
               title: (item as Event).title || "",
               description: item.description || "",
               date: (item as Event).date || "",
               location: (item as Event).location || "",
-              image: item.image ?? null,
+              image: item.image,
             } as Event)
       );
 
