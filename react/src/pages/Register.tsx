@@ -10,7 +10,6 @@ import {
   InputLabel,
   Input,
   FormHelperText,
-  Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -75,21 +74,6 @@ const Register: React.FC = () => {
 
   return (
     <Container maxWidth="xs">
-      <Box sx={{ mt: 4, textAlign: "center" }}>
-        <Typography
-          variant="h4"
-          sx={{
-            color: "#00A2FF",
-            fontWeight: "bold",
-            textShadow: "0px 0px 15px rgba(0, 162, 255, 1)",
-            letterSpacing: "2px",
-            fontFamily: "'Orbitron', sans-serif",
-          }}
-        >
-          Rejestracja
-        </Typography>
-      </Box>
-
       <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 2 }}>
         <FormControl fullWidth margin="normal" variant="standard">
           <InputLabel
