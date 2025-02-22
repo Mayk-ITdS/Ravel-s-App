@@ -7,15 +7,17 @@ import bcrypt from "bcrypt";
 import HapiJWT from "@hapi/jwt";
 import jsonwebtoken from "jsonwebtoken";
 import path from "path";
+import "dotenv/config";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const db = await mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "root",
-  database: "ravel_store",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: Number(process.env.DB_PORT),
 });
 
 const server = Hapi.server({
