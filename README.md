@@ -1,15 +1,34 @@
-Welcome to my test e-commerce CRUD app with musical articles connected with Maurice Ravel as a default products and events.
+# E-Commerce CRUD App (Polish Website)
 
-Add items to your cart and make an order. The state of application is managed by Redux. Data stored in MariaDB database working on Mysql server.
+This is a test e-commerce CRUD application featuring musical articles related to Maurice Ravel as default products and events.
 
-You can easily manage a content within and intuitive admin-panel.
+## Features
+- Add items to your cart and place orders.
+- Manage content easily through an intuitive admin panel.
+- State management with Redux.
+- Data stored in MariaDB running on a MySQL server.
 
-To run the app clone the repository to a new folder and then run npm install in both of them.
+## Installation & Setup
+### Prerequisites
+- Node.js & npm
+- MySQL server
+- Required dependencies (see `package.json`)
 
-You will need @hapi, vite, MUI, react, react-router-dom and other dependencies. Check pack package.json and package-lock.json if needed.
+### Steps
+1. Install dependencies for both frontend and backend:
+   ```sh
+   npm install # (in both /hapi and /react)
+   ```
+2. Set up the database:
+   - Start your MySQL server.
+   - Run `/hapi/database/setup.sql` to create the necessary tables to run the backend.
+   - Input the server details into a .env file inside the /hapi subdirectory (see .env.example for the expected values)
+3. Start the development servers:
+   ```sh
+   npm run dev # (in both /hapi and /react)
+   ```
 
-Yo will also have to run an mysql server and then import a database file.
+## Live Demo
+Visit [http://209.97.139.66](http://209.97.139.66) to see the app in action (hosted on a DigitalOcean VPS).
 
-  npm run dev both for front and backend and there You go : )
-
-Access http://209.97.139.66 to have a look at the app. It`s working on vps digitalOcean droplet.
+**Note:** The website is in Polish.
