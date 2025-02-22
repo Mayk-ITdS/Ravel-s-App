@@ -21,6 +21,7 @@ This is a test e-commerce CRUD application featuring musical articles related to
    ```
 2. Set up the database:
    - Start your MySQL server.
+   - Run `/hapi/database/setup.sql` to create the necessary tables to run the backend.
    - Input the server details into a .env file inside the /hapi subdirectory (see .env.example for the expected values)
 3. Start the development servers:
    ```sh
