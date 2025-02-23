@@ -77,6 +77,7 @@ server.route({
   method: "POST",
   path: "/register",
   options: {
+    auth: false,
     payload: {
       allow: ["application/json", "application/x-www-form-urlencoded"],
       parse: true,

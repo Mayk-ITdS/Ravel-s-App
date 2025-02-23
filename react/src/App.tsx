@@ -62,9 +62,9 @@ const App: React.FC = () => {
             <Route path="/cart" element={<Cart />} />
             <Route path="/user/dashboard" element={<Dashboard user={user} />} />
             <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/register" element={<Register />} />
             <Route path="*" element={<Navigate to="/" replace />} />{" "}
           </Route>
+          <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
         </Routes>
 
