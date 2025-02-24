@@ -29,6 +29,6 @@ This is a test e-commerce CRUD application featuring musical articles related to
    ```
 
 ## Live Demo
-Visit [http://209.97.139.66](http://209.97.139.66) to see the app in action (hosted on a DigitalOcean VPS).
+Visit [http://209.97.139.66:5173](http://209.97.139.66:5173) to see the app in action (hosted on a DigitalOcean VPS).
 
 **Note:** The website is in Polish.
