@@ -11,18 +11,37 @@ import "dotenv/config";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const ca = process.env.DB_CA_PATH
+  ? fs.readFileSync(path.resolve(process.cwd(), process.env.DB_CA_PATH), "utf8")
+  : undefined;
 
-const db = await mysql.createConnection({
+const ssl = ca
+  ? {
+      ca,
+      rejectUnauthorized: true,
+      ...(process.env.DB_SSL_SERVERNAME
+        ? { servername: process.env.DB_SSL_SERVERNAME }
+        : {}),
+    }
+  : undefined;
+const db = await mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: Number(process.env.DB_PORT),
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
+
+  ssl,
 });
 
 const server = Hapi.server({
-  port: 5000,
-  host: "localhost",
+  port: Number(process.env.PORT) || 5000,
+  host: "0.0.0.0",
   routes: {
     cors: {
       origin: ["*"],
@@ -57,7 +76,7 @@ server.auth.default("jwt");
 
 server.ext("onRequest", (request, h) => {
   console.log(
-    `📥 Otrzymano zapytanie: ${request.method.toUpperCase()} ${request.path}`
+    `Otrzymano zapytanie: ${request.method.toUpperCase()} ${request.path}`
   );
   return h.continue;
 });
@@ -132,7 +151,7 @@ server.route({
     },
   },
   handler: async (request, h) => {
-    console.log("📥 Otrzymane dane:", JSON.stringify(request.payload, null, 2));
+    console.log("Otrzymane dane:", JSON.stringify(request.payload, null, 2));
 
     if (!request.payload?.email || !request.payload?.password) {
       return h.response({ error: "Email i hasło są wymagane" }).code(400);
