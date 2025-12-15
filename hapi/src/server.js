@@ -24,7 +24,10 @@ const server = Hapi.server({
   port: 5000,
   host: "localhost",
   routes: {
-    cors: true,
+    cors: {
+      origin: ["*"],
+      headers: ["Accept", "Content-Type", "Authorization"],
+    },
     payload: {
       maxBytes: 10 * 1024 * 1024,
     },
@@ -122,6 +125,7 @@ server.route({
   path: "/login",
   options: {
     auth: false,
+    cors: true,
     payload: {
       allow: ["application/json", "application/x-www-form-urlencoded"],
       parse: true,
@@ -220,7 +224,7 @@ server.route({
   options: { auth: "jwt" },
   handler: async (request, h) => {
     try {
-      console.log("🛡 Uwierzytelniony użytkownik:", request.auth.credentials);
+      console.log("Uwierzytelniony użytkownik:", request.auth.credentials);
       const userId = request.auth.credentials.userId;
 
       const [orders] = await db.execute(
@@ -284,7 +288,7 @@ server.route({
           const product_price = price ?? 0.0;
 
           console.log(
-            `🛠 Sprawdzam: ${product_id}, ${product_name}, ${product_quantity}, ${product_price}`
+            `Sprawdzam: ${product_id}, ${product_name}, ${product_quantity}, ${product_price}`
           );
 
           return [
@@ -324,6 +328,7 @@ server.route({
 server.route({
   method: "GET",
   path: "/{type}/{id}",
+
   handler: async (request, h) => {
     const { type, id } = request.params;
     if (type !== "products" && type !== "events") {
@@ -335,9 +340,17 @@ server.route({
     try {
       const [rows] = await db.execute(`SELECT * FROM ${type} WHERE id=?`, [id]);
       if (rows.length === 0) {
-        return h.response({ error: "Nie znaleziono" }).code(404);
+        return h.response({ error: "Not found" }).code(404);
       }
-      return h.response(rows[0]);
+      const item = rows[0];
+      return h
+        .response({
+          ...item,
+          image: item.image
+            ? `data:image/png;base64,${item.image.toString("base64")}`
+            : null,
+        })
+        .code(200);
     } catch (error) {
       console.error(" Błąd pobierania elementu:", error);
       return h.response({ error: "Błąd pobierania elementu" }).code(500);
@@ -349,36 +362,38 @@ server.route({
   method: ["POST", "PUT"],
   path: "/{type}/{id?}",
   options: {
-    payload: {
-      parse: true,
-      allow: "application/json",
-    },
+    payload: { parse: true, allow: "application/json" },
   },
   handler: async (request, h) => {
-    try {
-      const { type, id } = request.params;
-      const payload = request.payload;
-      console.log("Otrzymane dane z frontendu:", payload);
+    const { type, id } = request.params;
+    const payload = request.payload;
 
-      console.log("Otrzymane parametry:", request.params);
-      if (type !== "products" && type !== "events") {
-        return h
-          .response({ error: "Invalid type. Use 'products' or 'events'." })
-          .code(400);
+    if (type !== "products" && type !== "events") {
+      return h
+        .response({ error: "Invalid type. Use 'products' or 'events'." })
+        .code(400);
+    }
+    const hasImageField = Object.prototype.hasOwnProperty.call(
+      payload,
+      "image"
+    );
+
+    if (hasImageField && payload.image) {
+      try {
+        payload.image = Buffer.from(
+          String(payload.image).split(",")[1],
+          "base64"
+        );
+      } catch (e) {
+        return h.response({ error: "Invalid image format" }).code(400);
       }
-      if (payload.image) {
-        try {
-          payload.image = Buffer.from(payload.image.split(",")[1], "base64");
-          console.log(payload.image);
-        } catch (error) {
-          console.error("Blad konwersji obrazu", error);
-          return h.response({ error: "Invalid image format" }).code(400);
-        }
-      } else {
-        payload.image = null;
-      }
-      if (id) {
-        if (type === "products") {
+    }
+
+    let entityId = id ? Number(id) : null;
+
+    if (entityId) {
+      if (type === "products") {
+        if (hasImageField) {
           await db.execute(
             "UPDATE products SET name=?, description=?, price=?, category=?, image=? WHERE id=?",
             [
@@ -386,11 +401,37 @@ server.route({
               payload.description ?? null,
               payload.price ?? null,
               payload.category ?? null,
-              payload.image,
-              id,
+              payload.image ?? null,
+              entityId,
             ]
           );
         } else {
+          await db.execute(
+            "UPDATE products SET name=?, description=?, price=?, category=? WHERE id=?",
+            [
+              payload.name ?? null,
+              payload.description ?? null,
+              payload.price ?? null,
+              payload.category ?? null,
+              entityId,
+            ]
+          );
+        }
+        const [rows] = await db.execute(
+          "SELECT id, name, description, price, category, image FROM products WHERE id=?",
+          [entityId]
+        );
+        const row = rows[0];
+        return h
+          .response({
+            ...row,
+            image: row.image
+              ? `data:image/png;base64,${row.image.toString("base64")}`
+              : null,
+          })
+          .code(200);
+      } else {
+        if (hasImageField) {
           await db.execute(
             "UPDATE events SET title=?, description=?, date=?, location=?, image=? WHERE id=?",
             [
@@ -398,48 +439,88 @@ server.route({
               payload.description ?? null,
               payload.date ?? null,
               payload.location ?? null,
-              payload.image,
-              id,
+              payload.image ?? null,
+              entityId,
+            ]
+          );
+        } else {
+          await db.execute(
+            "UPDATE events SET title=?, description=?, date=?, location=? WHERE id=?",
+            [
+              payload.title ?? null,
+              payload.description ?? null,
+              payload.date ?? null,
+              payload.location ?? null,
+              entityId,
             ]
           );
         }
-        return h.response({
-          message: `${type.slice(0, -1)} zaktualizowany`,
-          id,
-        });
-      }
-
-      let result;
-      if (type === "products") {
-        [result] = await db.execute(
-          "INSERT INTO products (name, description, price, category, image) VALUES (?, ?, ?, ?, ?)",
-          [
-            payload.name ?? null,
-            payload.description ?? null,
-            payload.price ?? null,
-            payload.category ?? null,
-            payload.image,
-          ]
+        const [rows] = await db.execute(
+          "SELECT id, title, description, date, location, image FROM events WHERE id=?",
+          [entityId]
         );
-      } else {
-        [result] = await db.execute(
-          "INSERT INTO events (title, description, date, location, image) VALUES (?, ?, ?, ?, ?)",
-          [
-            payload.title ?? null,
-            payload.description ?? null,
-            payload.date ?? null,
-            payload.location ?? null,
-            payload.image,
-          ]
-        );
+        const row = rows[0];
+        return h
+          .response({
+            ...row,
+            image: row.image
+              ? `data:image/png;base64,${row.image.toString("base64")}`
+              : null,
+          })
+          .code(200);
       }
+    }
+    if (type === "products") {
+      const [result] = await db.execute(
+        "INSERT INTO products (name, description, price, category, image) VALUES (?, ?, ?, ?, ?)",
+        [
+          payload.name ?? null,
+          payload.description ?? null,
+          payload.price ?? null,
+          payload.category ?? null,
+          hasImageField ? payload.image ?? null : null,
+        ]
+      );
+      entityId = result.insertId;
+      const [rows] = await db.execute(
+        "SELECT id, name, description, price, category, image FROM products WHERE id=?",
+        [result.insertId]
+      );
+      const item = rows[0];
+      return h
+        .response({
+          ...item,
+          image: item.image
+            ? `data:image/png;base64,${item.image.toString("base64")}`
+            : null,
+        })
+        .code(201);
+    } else {
+      const [result] = await db.execute(
+        "INSERT INTO events (title, description, date, location, image) VALUES (?, ?, ?, ?, ?)",
+        [
+          payload.title ?? null,
+          payload.description ?? null,
+          payload.date ?? null,
+          payload.location ?? null,
+          hasImageField ? payload.image ?? null : null,
+        ]
+      );
+      entityId = result.insertId;
 
-      return h.response({
-        message: `${type.slice(0, -1)} dodany`,
-      });
-    } catch (error) {
-      console.error("Błąd serwera:", error);
-      return h.response({ error: "Błąd serwera" }).code(500);
+      const [rows] = await db.execute(
+        "SELECT id, title, description, date, location, image FROM events WHERE id=?",
+        [entityId]
+      );
+      const row = rows[0];
+      return h
+        .response({
+          ...row,
+          image: row.image
+            ? `data:image/png;base64,${row.image.toString("base64")}`
+            : null,
+        })
+        .code(201);
     }
   },
 });
