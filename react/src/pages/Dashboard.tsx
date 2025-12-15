@@ -36,8 +36,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [openRow, setOpenRow] = useState<number | null>(null);
   const [filter, setFilter] = useState<string>("all");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
   const API_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
     if (!currentUser) {
