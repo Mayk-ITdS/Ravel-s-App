@@ -12,6 +12,7 @@ import {
 import AddEditItemDialog from "./AddEditItemDialog";
 import { Product, Event } from "../../types/types";
 import axios from "axios";
+import useConfirm from "../../hooks/useConfirm";
 
 type EditType = "product" | "event";
 
@@ -43,32 +44,35 @@ const AdminPanel: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editItem, setEditItem] = useState<Product | Event | null>(null);
   const [editType, setEditType] = useState<EditType>("product");
-  const API_URL = import.meta.env.VITE_API_URL;
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [productsRes, eventsRes] = await Promise.all([
-          axios.get<Product[]>(`${API_URL}/products`),
-          axios.get<Event[]>(`${API_URL}/events`),
-        ]);
 
-        setProducts(productsRes.data);
-        setEvents(eventsRes.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    fetchData();
-  }, []);
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  const { confirm, Confirm } = useConfirm();
+
+  const fetchData = async () => {
+    try {
+      const [productsRes, eventsRes] = await Promise.all([
+        axios.get<Product[]>(`${API_URL}/products`),
+        axios.get<Event[]>(`${API_URL}/events`),
+      ]);
+      setProducts(productsRes.data);
+      setEvents(eventsRes.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+  useEffect(() => {
+    fetchData().catch((error) => console.error(error));
+  }, [API_URL]);
 
   const handleOpenDialog = (type: EditType, item?: Product | Event | null) => {
     setEditType(type);
-    setEditItem(item ?? null);
+    setEditItem(item ?? getDefaultItem(type));
     setOpenDialog(true);
   };
   const handleDelete = async (type: "product" | "event", id: number) => {
     try {
-      await axios.delete(`${API_URL}/${type}/${id}`);
+      await axios.delete(`${API_URL}/${type}s/${id}`);
 
       if (type === "product") {
         setProducts((prev) => prev.filter((p) => p.id !== id));
@@ -81,46 +85,62 @@ const AdminPanel: React.FC = () => {
       console.error("Błąd usuwania:", error);
     }
   };
-
+  const onDelete = async (type: "product" | "event", id: number) => {
+    const yes = await confirm({
+      title: "Confirm Deletion",
+      description: "Are you sure you want to delete this item?",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      destructive: true,
+    });
+    if (!yes) return;
+    await handleDelete(type, id);
+  };
   const handleSave = async (newItem: Product | Event) => {
-    if (!editItem) return;
+    console.log("I`m using handlesave:", newItem);
+    if (editItem) {
+      const isEditing = Boolean(editItem.id);
+      console.log("isEditing?? : ", isEditing);
+      console.log("API_URL przed", API_URL);
 
-    const isEditing = Boolean(editItem.id);
-    const url = isEditing
-      ? `${API_URL}/${editType}s/${editItem.id}`
-      : `${API_URL}/${editType}s`;
-    console.log("Wysyłane dane do backendu:", newItem);
-    try {
-      const { data: savedItem } = await axios({
-        method: isEditing ? "PUT" : "POST",
-        url,
-        data: newItem,
-        headers: { "Content-Type": "application/json" },
-      });
+      const url = isEditing
+        ? `${API_URL}/${editType}s/${editItem.id}`
+        : `${API_URL}/${editType}s`;
+      console.log("API_URL po", API_URL);
 
-      console.log("Otrzymana odpowiedź z backendu:", savedItem);
+      console.log("Wysyłane dane do backendu:", newItem);
+      try {
+        const { data: savedItem } = await axios({
+          method: isEditing ? "PUT" : "POST",
+          url,
+          data: newItem,
+          headers: { "Content-Type": "application/json" },
+        });
 
-      if (editType === "product") {
-        setProducts((prev) =>
-          isEditing
-            ? prev.map((p) =>
-                p.id === savedItem.id ? { ...p, ...savedItem } : p
-              )
-            : [...prev, savedItem]
-        );
-      } else {
-        setEvents((prev) =>
-          isEditing
-            ? prev.map((e) =>
-                e.id === savedItem.id ? { ...e, ...savedItem } : e
-              )
-            : [...prev, savedItem]
-        );
+        console.log("Otrzymana odpowiedź z backendu:", savedItem);
+
+        if (editType === "product") {
+          setProducts((prev) =>
+            isEditing
+              ? prev.map((p) =>
+                  p.id === savedItem.id ? { ...p, ...savedItem } : p
+                )
+              : [...prev, savedItem]
+          );
+        } else {
+          setEvents((prev) =>
+            isEditing
+              ? prev.map((e) =>
+                  e.id === savedItem.id ? { ...e, ...savedItem } : e
+                )
+              : [...prev, savedItem]
+          );
+        }
+        await fetchData();
+        setOpenDialog(false);
+      } catch (error) {
+        console.error("Błąd API:", error);
       }
-
-      setOpenDialog(false);
-    } catch (error) {
-      console.error("Błąd API:", error);
     }
   };
 
@@ -176,7 +196,6 @@ const AdminPanel: React.FC = () => {
                   size="small"
                   sx={{
                     color: "blue",
-
                     fontWeight: "700",
                     border: "1px, solid, grey",
                     backgroundColor: "whitesmoke",
@@ -189,12 +208,11 @@ const AdminPanel: React.FC = () => {
                   size="small"
                   sx={{
                     color: "rosybrown",
-
                     fontWeight: "700",
                     border: "1px, solid, grey",
                     backgroundColor: "whitesmoke",
                   }}
-                  onClick={() => handleDelete("product", product.id)}
+                  onClick={() => onDelete("product", product.id)}
                 >
                   Delete
                 </Button>
@@ -249,7 +267,7 @@ const AdminPanel: React.FC = () => {
                     border: "1px, solid, grey",
                     backgroundColor: "whitesmoke",
                   }}
-                  onClick={() => handleDelete("event", event.id)}
+                  onClick={() => onDelete("event", event.id)}
                 >
                   Delete
                 </Button>
@@ -265,7 +283,9 @@ const AdminPanel: React.FC = () => {
         onSave={handleSave}
         type={editType}
         item={editItem ?? getDefaultItem(editType)}
+        confirm={confirm}
       />
+      {Confirm}
     </Container>
   );
 };

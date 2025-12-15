@@ -15,6 +15,13 @@ import { SelectChangeEvent } from "@mui/material";
 
 interface AddEditItemDialogProps {
   open: boolean;
+  confirm: (options: {
+    title?: string;
+    description?: React.ReactNode;
+    confirmText?: string;
+    cancelText?: string;
+    destructive?: boolean;
+  }) => Promise<boolean>;
   onClose: () => void;
   onSave: (newItem: Product | Event) => void;
   type: "product" | "event";
@@ -47,6 +54,7 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
   item,
   type,
   onSave,
+  confirm,
 }) => {
   const [formData, setFormData] = useState<Product | Event>(() =>
     getDefaultItem(type)
@@ -172,6 +180,7 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
             <FormControl fullWidth margin="dense">
               <InputLabel>Kategoria</InputLabel>
               <Select
+                label="Kategoria"
                 name="category"
                 value={"category" in formData ? formData.category : ""}
                 onChange={handleSelectChange}
@@ -217,16 +226,24 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
         <input type="file" accept="image/*" onChange={handleUploadImage} />
 
         <Button
-          onClick={() => {
-            console.log("Wysylane dane:", formData);
-            onSave(formData);
+          onClick={async () => {
+            const confirmed = await confirm({
+              title: "Confirm save",
+              description: "Are you sure you want to save the changes?",
+              confirmText: "Save",
+              cancelText: "Cancel",
+            });
+            if (confirmed) {
+              const payload = { ...formData, image: preview };
+              onSave(payload as any);
+            }
           }}
           variant="contained"
           color="primary"
           fullWidth
           sx={{ mt: 2 }}
         >
-          {item ? "Zapisz zmiany" : "Dodaj"}
+          Save
         </Button>
       </DialogContent>
     </Dialog>
