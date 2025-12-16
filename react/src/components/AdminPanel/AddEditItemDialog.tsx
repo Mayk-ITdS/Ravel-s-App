@@ -12,6 +12,7 @@ import {
   Select,
 } from "@mui/material";
 import { SelectChangeEvent } from "@mui/material";
+import toDataUrl from "../../utils/toDataUrl";
 
 interface AddEditItemDialogProps {
   open: boolean;
@@ -73,7 +74,7 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
               description: item.description || "",
               price: (item as Product).price ?? 0,
               category: (item as Product).category || "vinyl",
-              image: (item as Product).image,
+              image: toDataUrl((item as Product).image),
             } as Product)
           : ({
               ...prevState,
@@ -82,12 +83,12 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
               description: item.description || "",
               date: (item as Event).date || "",
               location: (item as Event).location || "",
-              image: item.image,
+              image: toDataUrl(item.image),
             } as Event)
       );
 
-      if (item.image && typeof item.image === "string") {
-        setPreview(item.image);
+      if (toDataUrl(item.image)) {
+        setPreview(toDataUrl(item.image));
       }
     }
   }, [item]);

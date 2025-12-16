@@ -13,6 +13,7 @@ import AddEditItemDialog from "./AddEditItemDialog";
 import { Product, Event } from "../../types/types";
 import axios from "axios";
 import useConfirm from "../../hooks/useConfirm";
+import toDataUrl from "../../utils/toDataUrl";
 
 type EditType = "product" | "event";
 
@@ -175,7 +176,7 @@ const AdminPanel: React.FC = () => {
             <Card sx={{ maxWidth: 345 }}>
               <CardMedia
                 sx={{ height: 140 }}
-                image={product.image}
+                image={toDataUrl(product.image)}
                 title="Event"
               />
               <CardContent>
@@ -231,7 +232,7 @@ const AdminPanel: React.FC = () => {
             <Card sx={{ maxWidth: 345 }}>
               <CardMedia
                 sx={{ height: 140 }}
-                image={event.image}
+                image={toDataUrl(event.image)}
                 title="Event"
               />
               <CardContent>

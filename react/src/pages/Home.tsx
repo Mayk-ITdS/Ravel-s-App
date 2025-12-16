@@ -16,7 +16,7 @@ import heroImage from "../assets/hero.jpg";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "../Store/store";
-
+import toDataUrl from "../utils/toDataUrl";
 interface Product {
   id: number;
   name: string;
@@ -169,7 +169,7 @@ const Home: React.FC = () => {
                     >
                       <CardMedia
                         sx={{ height: 140 }}
-                        image={prod.image}
+                        image={toDataUrl(prod.image)}
                         title="green iguana"
                       />
                       <CardContent sx={{ backgroundColor: "#1E1E1E" }}>
@@ -213,7 +213,7 @@ const Home: React.FC = () => {
                     <CardMedia
                       component="img"
                       height="200"
-                      image={event.image}
+                      image={toDataUrl(event.image)}
                       alt="Concert Event"
                     />
                     <CardContent>
