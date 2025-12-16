@@ -166,15 +166,15 @@ server.route({
         "SELECT id, username, email, password_hash FROM users WHERE email = ?";
       const [rows] = await db.execute(sql, [email]);
 
-      console.log("🟡 Dane pobrane z bazy:", rows);
+      console.log("Dane pobrane z bazy:", rows);
 
       if (!rows.length) {
         return h.response({ error: "User not found" }).code(404);
       }
 
       const user = rows[0];
-      console.log("🔑 Hasło użytkownika w bazie:", user.password_hash);
-      console.log("🔑 Hasło podane przez użytkownika:", password);
+      console.log("Hasło użytkownika w bazie:", user.password_hash);
+      console.log("Hasło podane przez użytkownika:", password);
 
       const isPasswordCorrect = await bcrypt.compare(
         password,
@@ -276,7 +276,7 @@ server.route({
   },
   handler: async (request, h) => {
     console.log(
-      "📥 Otrzymane dane do /orders:",
+      "Otrzymane dane do /orders:",
       JSON.stringify(request.payload, null, 2)
     );
 

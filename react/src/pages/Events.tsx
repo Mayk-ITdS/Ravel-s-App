@@ -14,6 +14,7 @@ import {
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../Store/cartSlice";
+import toDataUrl from "../utils/toDataUrl";
 
 interface Event {
   id: number;
@@ -35,14 +36,25 @@ const Events: React.FC = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         console.error("Brak tokena! Użytkownik nie jest zalogowany.");
+        setLoading(false);
         return;
       }
 
-      console.log("🟢 Używam tokena do pobierania danych:", token);
+      console.log("Używam tokena do pobierania danych:", token);
+
       try {
         const responseEvents = await Promise.all([
-          axios.get(`${API_URL}/events`),
+          axios.get(`${API_URL}/events`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
+        console.log("EVENT[0] image:", responseEvents[0].data?.[0]?.image);
+        console.log("typeof image:", typeof responseEvents[0].data?.[0]?.image);
+        console.log(
+          "prefix:",
+          String(responseEvents[0].data?.[0]?.image).slice(0, 30)
+        );
+
         setEvents(responseEvents[0].data);
       } catch (err) {
         setError("Nie udało się pobrać produktów.");
@@ -95,7 +107,7 @@ const Events: React.FC = () => {
                     <CardMedia
                       component="img"
                       height="250"
-                      image={event.image}
+                      image={toDataUrl(event.image)}
                       alt={event.title}
                     />
 
@@ -126,7 +138,7 @@ const Events: React.FC = () => {
                               id: event.id,
                               name: event.title,
                               price: 99.99,
-                              image: event.image,
+                              image: toDataUrl(event.image),
                               quantity: 1,
                               type: "event",
                             })

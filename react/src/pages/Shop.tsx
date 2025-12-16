@@ -14,6 +14,7 @@ import {
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../Store/cartSlice";
+import toDataUrl from "../utils/toDataUrl";
 
 interface Product {
   id: number;
@@ -98,7 +99,7 @@ const Shop: React.FC = () => {
                       sx={{ objectFit: "cover" }}
                       component="img"
                       height="250"
-                      image={product.image}
+                      image={toDataUrl(product.image)}
                       alt={product.name}
                     />
                     <CardContent>
@@ -128,7 +129,7 @@ const Shop: React.FC = () => {
                               id: product.id,
                               name: product.name,
                               price: product.price,
-                              image: product.image,
+                              image: toDataUrl(product.image),
                               quantity: 1,
                               type: "product",
                             })
