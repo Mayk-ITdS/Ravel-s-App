@@ -4,6 +4,7 @@
     "@hapi/hapi": "^21.3.12",
     "@hapi/inert": "^7.1.0",
     "@hapi/jwt": "^3.2.0",
+    "axios": "^1.13.2",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.7",
     "joi": "^17.13.3",
@@ -16,12 +17,14 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.1",
-    "nodemon": "^3.1.9",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   },
   "scripts": {
-    "dev": "nodemon --ext ts --exec ts-node src/server.js",
-    "start": "node src/server.js"
+    "tunnel": "ssh -N -L 3307:ravel-app-db-do-user-19154567-0.l.db.ondigitalocean.com:25060 deploy@167.172.34.63 -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3",
+    "dev": "nodemon src/server.js",
+    "dev:local": "concurrently -k -n TUNNEL,API \"npm run tunnel\" \"npm run dev\""
   }
 }

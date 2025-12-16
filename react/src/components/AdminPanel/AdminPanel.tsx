@@ -49,20 +49,20 @@ const AdminPanel: React.FC = () => {
 
   const { confirm, Confirm } = useConfirm();
 
+  const fetchData = async () => {
+    try {
+      const [productsRes, eventsRes] = await Promise.all([
+        axios.get<Product[]>(`${API_URL}/products`),
+        axios.get<Event[]>(`${API_URL}/events`),
+      ]);
+      setProducts(productsRes.data);
+      setEvents(eventsRes.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [productsRes, eventsRes] = await Promise.all([
-          axios.get<Product[]>(`${API_URL}/products`),
-          axios.get<Event[]>(`${API_URL}/events`),
-        ]);
-        setProducts(productsRes.data);
-        setEvents(eventsRes.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    fetchData();
+    fetchData().catch((error) => console.error(error));
   }, [API_URL]);
 
   const handleOpenDialog = (type: EditType, item?: Product | Event | null) => {
@@ -94,7 +94,7 @@ const AdminPanel: React.FC = () => {
       destructive: true,
     });
     if (!yes) return;
-    handleDelete(type, id);
+    await handleDelete(type, id);
   };
   const handleSave = async (newItem: Product | Event) => {
     console.log("I`m using handlesave:", newItem);
@@ -136,7 +136,7 @@ const AdminPanel: React.FC = () => {
               : [...prev, savedItem]
           );
         }
-
+        await fetchData();
         setOpenDialog(false);
       } catch (error) {
         console.error("Błąd API:", error);

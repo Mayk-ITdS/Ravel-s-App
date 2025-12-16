@@ -196,7 +196,7 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
           <>
             <TextField
               name="date"
-              label="Data"
+              label="Date"
               fullWidth
               margin="dense"
               type="date"
@@ -205,7 +205,7 @@ const AddEditItemDialog: React.FC<AddEditItemDialogProps> = ({
             />
             <TextField
               name="location"
-              label="Lokalizacja"
+              label="Location"
               fullWidth
               margin="dense"
               value={"location" in formData ? formData.location : ""}

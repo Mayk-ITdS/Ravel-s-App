@@ -15,18 +15,17 @@ import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../Store/cartSlice";
 
-interface Product {
+interface Event {
   id: number;
-  name: string;
+  title: string;
   description: string;
-  price: number;
+  date: number;
   image: string;
-  category: string;
 }
 
-const Shop: React.FC = () => {
+const Events: React.FC = () => {
   const { category } = useParams();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useDispatch();
@@ -39,13 +38,12 @@ const Shop: React.FC = () => {
         return;
       }
 
-      console.log("Używam tokena do pobierania danych:", token);
+      console.log("🟢 Używam tokena do pobierania danych:", token);
       try {
-        const responseProducts = await Promise.all([
-          axios.get(`${API_URL}/products`),
+        const responseEvents = await Promise.all([
+          axios.get(`${API_URL}/events`),
         ]);
-
-        setProducts(responseProducts[0].data);
+        setEvents(responseEvents[0].data);
       } catch (err) {
         setError("Nie udało się pobrać produktów.");
       } finally {
@@ -66,7 +64,7 @@ const Shop: React.FC = () => {
       }}
     >
       <Typography variant="h4" fontWeight="bold" textAlign="center" mb={4}>
-        Boutique de Ravel {category?.toUpperCase()}
+        Événements {category?.toUpperCase()}
       </Typography>
 
       {loading ? (
@@ -84,9 +82,9 @@ const Shop: React.FC = () => {
         </Typography>
       ) : (
         <Grid container spacing={4}>
-          {products.length > 0 ? (
-            products.map((product: Product) => (
-              <Grid item xs={12} sm={6} md={4} key={product.id}>
+          {events.length > 0 ? (
+            events.map((event: Event) => (
+              <Grid item xs={12} sm={6} md={4} key={event.id}>
                 <motion.div whileHover={{ scale: 1.05 }}>
                   <Card
                     sx={{
@@ -95,25 +93,25 @@ const Shop: React.FC = () => {
                     }}
                   >
                     <CardMedia
-                      sx={{ objectFit: "cover" }}
                       component="img"
                       height="250"
-                      image={product.image}
-                      alt={product.name}
+                      image={event.image}
+                      alt={event.title}
                     />
+
                     <CardContent>
                       <Typography variant="h6" fontWeight="bold">
-                        {product.name}
+                        {event.title}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {product.description}
+                        {event.description}
                       </Typography>
                       <Typography
                         variant="h6"
                         fontWeight="bold"
                         sx={{ color: "#E5B05E", mt: 1 }}
                       >
-                        {product.price} zł
+                        {event.date}
                       </Typography>
                       <Button
                         variant="contained"
@@ -125,12 +123,12 @@ const Shop: React.FC = () => {
                         onClick={() =>
                           dispatch(
                             addToCart({
-                              id: product.id,
-                              name: product.name,
-                              price: product.price,
-                              image: product.image,
+                              id: event.id,
+                              name: event.title,
+                              price: 99.99,
+                              image: event.image,
                               quantity: 1,
-                              type: "product",
+                              type: "event",
                             })
                           )
                         }
@@ -146,11 +144,11 @@ const Shop: React.FC = () => {
             <Typography variant="h6" textAlign="center" sx={{ width: "100%" }}>
               Aucun produit disponible dans cette catégorie.
             </Typography>
-          )}
+          )}{" "}
         </Grid>
       )}
     </Box>
   );
 };
 
-export default Shop;
+export default Events;

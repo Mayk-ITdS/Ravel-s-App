@@ -23,6 +23,8 @@ import { AppDispatch, RootState } from "./Store/store";
 import { setSession } from "./Store/authSlice";
 import axios from "axios";
 import Register from "./pages/Register";
+import Events from "./pages/events";
+import About from "./pages/About";
 
 const ProtectedRoute: React.FC<{
   token: string | null;
@@ -55,10 +57,13 @@ const App: React.FC = () => {
         <Routes>
           <Route element={<ProtectedRoute token={token} />}>
             <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
             <Route path="/works" element={<Works />} />
             <Route path="/gallerie" element={<ImageManager />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/shop/:category" element={<Shop />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/events/:category" element={<Events />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/user/dashboard" element={<Dashboard user={user} />} />
             <Route path="/admin" element={<AdminPanel />} />

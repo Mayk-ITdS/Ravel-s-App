@@ -81,7 +81,7 @@ const Header: React.FC = () => {
             }}
           >
             <InputBase
-              placeholder="Szukaj..."
+              placeholder="..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               sx={{ color: "white", width: "100%" }}
@@ -98,7 +98,7 @@ const Header: React.FC = () => {
               to="/shop"
               sx={{ fontSize: "1rem", textTransform: "none" }}
             >
-              Sklep
+              Boutique
             </Button>
             <Button
               color="inherit"
@@ -106,7 +106,7 @@ const Header: React.FC = () => {
               to="/events"
               sx={{ fontSize: "1rem", textTransform: "none" }}
             >
-              Wydarzenia
+              Événements
             </Button>
             <Button
               color="inherit"
@@ -114,7 +114,7 @@ const Header: React.FC = () => {
               to="/about"
               sx={{ fontSize: "1rem", textTransform: "none" }}
             >
-              O nas
+              À propos
             </Button>
 
             <IconButton component={Link} to="/cart">
@@ -141,7 +141,7 @@ const Header: React.FC = () => {
                   onClose={handleMenuClose}
                 >
                   <MenuItem onClick={() => navigate("/user/dashboard")}>
-                    Moj dashboard
+                    Mon tableau de bord
                   </MenuItem>
                   <Button
                     variant="contained"
@@ -153,15 +153,15 @@ const Header: React.FC = () => {
                       "&:hover": { backgroundColor: "#350A1E" },
                     }}
                   >
-                    Panel Admina
+                    Panneau d’administration
                   </Button>
 
-                  <MenuItem onClick={handleLogout}>Wyloguj się</MenuItem>
+                  <MenuItem onClick={handleLogout}>Se déconnecter</MenuItem>
                 </Menu>
               </>
             ) : (
               <Button color="inherit" component={Link} to="/login">
-                Zaloguj się
+                Se connecter
               </Button>
             )}
           </Box>
