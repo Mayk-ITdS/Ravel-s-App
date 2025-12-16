@@ -227,10 +227,12 @@ server.route({
         return h.response({ error: "No data found." }).code(404);
       }
 
-      console.log("📦 Dane z bazy:", [rows]);
+      console.log("Dane z bazy:", [rows]);
       const formattedData = rows.map((item) => ({
         ...item,
-        image: item.image || null,
+        image: Buffer.isBuffer(item.image)
+          ? item.image.toString("base64")
+          : String(item.image),
       }));
 
       return h.response(formattedData);
@@ -396,8 +398,10 @@ server.route({
     let text;
     try {
       const raw = request.payload;
-      const text = Buffer.isBuffer(raw) ? raw.toString("utf8") : String(raw);
-      console.log("RAW payload:", text.slice(0, 200)); // podgląd
+      const text = Buffer.isBuffer(raw)
+        ? raw.toString("base64")
+        : Buffer.from(String(raw), "utf8").toString("base64");
+      console.log("RAW payload:", text.slice(0, 200));
       console.log("RAW payload (stringify):");
       console.log("RAW bytes:", Buffer.isBuffer(raw) ? raw.slice(0, 40) : raw);
       payload = JSON.parse(text);
