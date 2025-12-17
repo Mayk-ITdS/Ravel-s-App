@@ -3,18 +3,22 @@
 This is a test e-commerce CRUD application featuring musical articles related to Maurice Ravel as default products and events.
 
 ## Features
+
 - Add items to your cart and place orders.
 - Manage content easily through an intuitive admin panel.
 - State management with Redux.
 - Data stored in MariaDB running on a MySQL server.
 
 ## Installation & Setup
+
 ### Prerequisites
+
 - Node.js & npm
 - MySQL server
 - Required dependencies (see `package.json`)
 
 ### Steps
+
 1. Install dependencies for both frontend and backend:
    ```sh
    npm install # (in both /hapi and /react)
@@ -29,6 +33,9 @@ This is a test e-commerce CRUD application featuring musical articles related to
    ```
 
 ## Live Demo
-Visit [http://209.97.139.66:5173](http://209.97.139.66:5173) to see the app in action (hosted on a DigitalOcean VPS).
 
-**Note:** The website is in Polish.
+Visit [http://http://167.172.34.63/] to see the app in action (hosted on a DigitalOcean VPS).
+You can whether register or use a demo admin profile:
+
+      email: hrabankova@office.com
+      password: Ilina112
